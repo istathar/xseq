@@ -10,234 +10,226 @@ import generic.util.DebugException;
 
 import java.io.FileNotFoundException;
 
-import org.gnu.gdk.Pixbuf;
-import org.gnu.glade.LibGlade;
-import org.gnu.gtk.Button;
-import org.gnu.gtk.Entry;
-import org.gnu.gtk.FileChooserDialog;
-import org.gnu.gtk.Gtk;
-import org.gnu.gtk.Image;
-import org.gnu.gtk.Label;
-import org.gnu.gtk.RadioButton;
-import org.gnu.gtk.ResponseType;
-import org.gnu.gtk.Window;
-import org.gnu.gtk.event.ButtonEvent;
-import org.gnu.gtk.event.ButtonListener;
-import org.gnu.gtk.event.EntryEvent;
-import org.gnu.gtk.event.EntryListener;
-import org.gnu.gtk.event.LifeCycleEvent;
-import org.gnu.gtk.event.LifeCycleListener;
+import org.gnome.gdk.Event;
+import org.gnome.gdk.Pixbuf;
+import org.gnome.glade.Glade;
+import org.gnome.glade.XML;
+import org.gnome.gtk.Button;
+import org.gnome.gtk.Editable;
+import org.gnome.gtk.Entry;
+import org.gnome.gtk.FileChooserDialog;
+import org.gnome.gtk.Gtk;
+import org.gnome.gtk.Image;
+import org.gnome.gtk.Label;
+import org.gnome.gtk.RadioButton;
+import org.gnome.gtk.ResponseType;
+import org.gnome.gtk.Widget;
+import org.gnome.gtk.Window;
 
 import xseq.client.ProcedureClient;
 
 /**
- * At the 0.2 stage, Need to specify either a procedure to be run, or the built
- * in example procedure.
+ * At the 0.2 stage, Need to specify either a procedure to be run, or the
+ * built in example procedure.
  * 
- * This will be deprecated by 0.4, as a proper initalization front end will have
- * been written.
+ * This will be deprecated by 0.4, as a proper initalization front end will
+ * have been written.
  * 
  * @author Andrew Cowie
  */
 public class TestLoadWindow
 {
-	private static final String	DEMO_SOURCE_DIR			= "doc/examples";
-	private static final String	DEMO_XML_FILE			= "simpleProcedure_v1_Example.xml";
+    private static final String DEMO_SOURCE_DIR = "doc/examples";
 
-	LibGlade					_glade					= null;
-	Window						_top					= null;
-	FileChooserDialog			_chooser				= null;
+    private static final String DEMO_XML_FILE = "simpleProcedure_v1_Example.xml";
 
-	Entry						_filename_entry			= null;
-	RadioButton					_builtin_radiobutton	= null;
-	RadioButton					_specify_radiobutton	= null;
+    XML _glade = null;
 
-	/**
-	 * Create a new TestLoadlWindow Window.
-	 *  
-	 */
-	public TestLoadWindow() {
+    Window _top = null;
 
-		try {
-			_glade = new LibGlade("share/testload.glade", this);
-		} catch (FileNotFoundException e) {
-			// If it can't find that glade file, we have an app
-			// configuration problem or worse some UI bug, and need to abort.
-			e.printStackTrace();
-			ProcedureClient.abort("Can't find glade file for TestLoadWindow.");
-		} catch (Exception e) {
-			e.printStackTrace();
-			ProcedureClient.abort("An internal error occured trying to read and process the glade file for DetailsWindow.");
-		}
+    FileChooserDialog _chooser = null;
 
-		/*
-		 * Quickly hide the windows while we do further construction on them.
-		 * Will leave the FileChooser hidden until called up by button...
-		 */
-		_top = (Window) _glade.getWidget("testload");
-		_top.hide();
+    Entry _filename_entry = null;
 
-		_chooser = (FileChooserDialog) _glade.getWidget("filechooser");
-		_chooser.hide();
+    RadioButton _builtin_radiobutton = null;
 
-		/*
-		 * Now start setting window properties.
-		 */
+    RadioButton _specify_radiobutton = null;
 
-		_top.setDecorated(true);
-		_top.setKeepAbove(false);
-		_top.setSkipTaskbarHint(false);
-		_top.setSkipPagerHint(false);
+    /**
+     * Create a new TestLoadlWindow Window.
+     * 
+     */
+    public TestLoadWindow() {
 
-		_top.addListener(new LifeCycleListener() {
-			public void lifeCycleEvent(LifeCycleEvent event) {
-			}
+        try {
+            _glade = Glade.parse("share/testload.glade", this);
+        } catch (FileNotFoundException e) {
+            // If it can't find that glade file, we have an app
+            // configuration problem or worse some UI bug, and need to abort.
+            e.printStackTrace();
+            ProcedureClient.abort("Can't find glade file for TestLoadWindow.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            ProcedureClient.abort("An internal error occured trying to read and process the glade file for DetailsWindow.");
+        }
 
-			public boolean lifeCycleQuery(LifeCycleEvent event) {
-				Gtk.mainQuit();
-				System.exit(0);
-				return false;
-			}
-		});
+        /*
+         * Quickly hide the windows while we do further construction on them.
+         * Will leave the FileChooser hidden until called up by button...
+         */
+        _top = (Window) _glade.getWidget("testload");
+        _top.hide();
 
-		/*
-		 * Proceed with completing main window adding necessary widgets.
-		 */
+        _chooser = (FileChooserDialog) _glade.getWidget("filechooser");
+        _chooser.hide();
 
-		Pixbuf construction_pixbuf = null;
-		try {
-			construction_pixbuf = new Pixbuf("share/pixmaps/underconstruction.png");
-		} catch (Exception e1) {
-			e1.printStackTrace();
-			System.exit(1);
-		}
-		_top.setIcon(construction_pixbuf);
+        /*
+         * Now start setting window properties.
+         */
 
-		Image construction_image = (Image) _glade.getWidget("construction");
-		construction_image.set(construction_pixbuf);
+        _top.setDecorated(true);
+        _top.setKeepAbove(false);
+        _top.setSkipTaskbarHint(false);
+        _top.setSkipPagerHint(false);
 
-		Label title_lable = (Label) _glade.getWidget("title_label");
-		title_lable.setMarkup("<big><big>xseq version " + ProcedureClient.VERSION + "</big></big>");
+        _top.connect(new Window.DELETE_EVENT() {
+            public boolean onDeleteEvent(Widget source, Event event) {
+                Gtk.mainQuit();
+                System.exit(0);
+                return false;
+            }
+        });
 
-		/*
-		 * For some reason, glade keeps overriding what button group the radios
-		 * belong to - so get handles and reset it by hand here.
-		 */
-		_builtin_radiobutton = (RadioButton) _glade.getWidget("builtin_radiobutton");
-		_builtin_radiobutton.setState(true);
-		_specify_radiobutton = (RadioButton) _glade.getWidget("specify_radiobutton");
+        /*
+         * Proceed with completing main window adding necessary widgets.
+         */
 
-		_filename_entry = (Entry) _glade.getWidget("filename_entry");
-		_filename_entry.addListener(new EntryListener() {
-			public void entryEvent(EntryEvent event) {
-				if (event.getType() == EntryEvent.Type.CHANGED) {
-					_specify_radiobutton.setState(true);
-				}
-			}
-		});
+        Pixbuf construction_pixbuf = null;
+        try {
+            construction_pixbuf = new Pixbuf("share/pixmaps/underconstruction.png");
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            System.exit(1);
+        }
+        _top.setIcon(construction_pixbuf);
 
-		Button select_button = (Button) _glade.getWidget("select_button");
+        Image construction_image = (Image) _glade.getWidget("construction");
+        construction_image.set(construction_pixbuf);
 
-		select_button.addListener(new ButtonListener() {
-			public void buttonEvent(ButtonEvent event) {
-				if (event.getType() == ButtonEvent.Type.CLICK) {
+        Label title_lable = (Label) _glade.getWidget("title_label");
+        title_lable.setLabel("<big><big>xseq version " + ProcedureClient.VERSION + "</big></big>");
 
-					_chooser.showAll();
-					_chooser.present();
+        /*
+         * For some reason, glade keeps overriding what button group the
+         * radios belong to - so get handles and reset it by hand here.
+         */
+        _builtin_radiobutton = (RadioButton) _glade.getWidget("builtin_radiobutton");
+        _builtin_radiobutton.setState(true);
+        _specify_radiobutton = (RadioButton) _glade.getWidget("specify_radiobutton");
 
-					int response = _chooser.run();
+        _filename_entry = (Entry) _glade.getWidget("filename_entry");
+        _filename_entry.connect(new Editable.CHANGED() {
+            public void onChanged(Editable source) {
+                _specify_radiobutton.setState(true);
+            }
+        });
 
-					/*
-					 * There seems to be some ResponseType is returned on
-					 * closing a window.
-					 */
-					if (response == ResponseType.NONE.getValue()) {
-						// System.out.println("ResponseType.NONE");
-						_chooser.hide();
-					}
-					if (response == ResponseType.DELETE_EVENT.getValue()) {
-						// System.out.println("ResponseType.DELETE_EVENT");
-						_chooser.hide();
-					}
+        Button select_button = (Button) _glade.getWidget("select_button");
 
-					/*
-					 * CANCEL button...
-					 */
-					if (response == ResponseType.CANCEL.getValue()) {
-						// System.out.println("ResponseType.CANCEL");
-						_chooser.hide();
-					}
+        select_button.connect(new Button.CLICKED() {
+            public void onClicked(Button source) {
+                _chooser.showAll();
+                _chooser.present();
 
-					/*
-					 * And, actually use the selected value if OK or <Enter> are
-					 * pressed...
-					 */
-					if (response == ResponseType.OK.getValue()) {
-						// System.out.println("ResponseType.OK");
-						_chooser.hide();
+                ResponseType response = _chooser.run();
 
-						String newFilename = _chooser.getFilename();
+                /*
+                 * There seems to be some ResponseType is returned on closing
+                 * a window.
+                 */
+                if (response == ResponseType.NONE) {
+                    // System.out.println("ResponseType.NONE");
+                    _chooser.hide();
+                }
+                if (response == ResponseType.DELETE_EVENT) {
+                    // System.out.println("ResponseType.DELETE_EVENT");
+                    _chooser.hide();
+                }
 
-						if (newFilename != null) {
-							_filename_entry.setText(newFilename);
-							/*
-							 * put the cursor at the end (ie, no kidding that
-							 * the file is in /home/andrew... show me the file I
-							 * picked!)
-							 */
-							_filename_entry.setCursorPosition(newFilename.length());
+                /*
+                 * CANCEL button...
+                 */
+                if (response == ResponseType.CANCEL) {
+                    // System.out.println("ResponseType.CANCEL");
+                    _chooser.hide();
+                }
 
-							/*
-							 * activate the specify radio button (nothing worse
-							 * than implicitly selecting something and the UI
-							 * not keeping up)
-							 */
-							_specify_radiobutton.activate();
-						}
-					}
-				}
-			}
-		});
+                /*
+                 * And, actually use the selected value if OK or <Enter> are
+                 * pressed...
+                 */
+                if (response == ResponseType.OK) {
+                    // System.out.println("ResponseType.OK");
+                    _chooser.hide();
 
-		Button _init_button = (Button) _glade.getWidget("init_button");
+                    String newFilename = _chooser.getFilename();
 
-		_init_button.addListener(new ButtonListener() {
-			public void buttonEvent(ButtonEvent event) {
-				if (event.getType() == ButtonEvent.Type.CLICK) {
+                    if (newFilename != null) {
+                        _filename_entry.setText(newFilename);
+                        /*
+                         * put the cursor at the end (ie, no kidding that the
+                         * file is in /home/andrew... show me the file I
+                         * picked!)
+                         */
+                        _filename_entry.setCursorPosition(newFilename.length());
 
-					String filename = null;
-					if (_builtin_radiobutton.getState() == true) {
-						filename = DEMO_SOURCE_DIR + "/" + DEMO_XML_FILE;
-					} else if (_specify_radiobutton.getState() == true) {
-						filename = _filename_entry.getText();
-					} else {
-						throw new DebugException("Oops - managed to not have either radio button selected!");
-					}
+                        /*
+                         * activate the specify radio button (nothing worse
+                         * than implicitly selecting something and the UI not
+                         * keeping up)
+                         */
+                        _specify_radiobutton.activate();
+                    }
+                }
+            }
+        });
 
-					try {
-						WindowRunner.loadAndRun(filename, _top);
+        Button _init_button = (Button) _glade.getWidget("init_button");
 
-						_top.destroy();
-						_chooser.destroy();
-					} catch (FileNotFoundException fnfe) {
-						// try again
-					}
-				}
-			}
-		});
+        _init_button.connect(new Button.CLICKED() {
+            public void onClicked(Button source) {
+                String filename = null;
+                if (_builtin_radiobutton.getState() == true) {
+                    filename = DEMO_SOURCE_DIR + "/" + DEMO_XML_FILE;
+                } else if (_specify_radiobutton.getState() == true) {
+                    filename = _filename_entry.getText();
+                } else {
+                    throw new DebugException("Oops - managed to not have either radio button selected!");
+                }
 
-		Button _cancel_button = (Button) _glade.getWidget("cancel_button");
+                try {
+                    WindowRunner.loadAndRun(filename, _top);
 
-		_cancel_button.addListener(new ButtonListener() {
-			public void buttonEvent(ButtonEvent event) {
-				if (event.getType() == ButtonEvent.Type.CLICK) {
-					Gtk.mainQuit();
-					System.exit(1);
-				}
-			}
-		});
+                    _top.hide();
+                    _top = null;
+                    _chooser.hide();
+                    _chooser = null;
+                } catch (FileNotFoundException fnfe) {
+                    // try again
+                }
+            }
+        });
 
-		_top.showAll();
-		_top.present();
-	}
+        Button _cancel_button = (Button) _glade.getWidget("cancel_button");
+
+        _cancel_button.connect(new Button.CLICKED() {
+            public void onClicked(Button source) {
+                Gtk.mainQuit();
+                System.exit(1);
+            }
+        });
+
+        _top.showAll();
+        _top.present();
+    }
 }

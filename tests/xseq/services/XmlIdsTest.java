@@ -17,127 +17,131 @@ import org.w3c.dom.NodeList;
  */
 public class XmlIdsTest extends TestCase
 {
-	// HARDCODE
-	private static final String	TEST_SOURCE_DIR	= "tests/xseq/services";
-	private static final String	TEST_DEST_DIR	= "tmp";
-	private static final String	TEST_XML_FILE	= "simpleProcedure_v1_Example.xml";
+    // HARDCODE
+    private static final String TEST_SOURCE_DIR = "tests/xseq/services";
 
-	public static final String	SOURCE_XML		= TEST_SOURCE_DIR + "/" + TEST_XML_FILE;
-	public static final String	DEST_XML		= TEST_DEST_DIR + "/" + TEST_XML_FILE;
+    private static final String TEST_DEST_DIR = "tmp";
 
-	public static void main(String[] args) {
-		junit.textui.TestRunner.run(XmlIdsTest.class);
-	}
+    private static final String TEST_XML_FILE = "simpleProcedure_v1_Example.xml";
 
-	public void testAssignXmlIds() {
-		String str = null;
-		Document doc = null;
+    public static final String SOURCE_XML = TEST_SOURCE_DIR + "/" + TEST_XML_FILE;
 
-		try {
-			str = XmlUtils.fileToString(SOURCE_XML);
-		} catch (FileNotFoundException e) {
-			fail("file not found; " + e.getMessage());
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail("not supposed to get IO errors reading files");
-		}
+    public static final String DEST_XML = TEST_DEST_DIR + "/" + TEST_XML_FILE;
 
-		if (str == null) {
-			// in real life, we would throw a real Exception?
-			fail("failed to actually read anything! Empty file? Bad!");
-		}
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(XmlIdsTest.class);
+    }
 
-		doc = XmlUtils.xmlStringToDOM(str);
+    public void testAssignXmlIds() {
+        String str = null;
+        Document doc = null;
 
-		// TODO do a verification that the document has type ID defined? In
-		// fact, move this to XmlUtils.
+        try {
+            str = XmlUtils.fileToString(SOURCE_XML);
+        } catch (FileNotFoundException e) {
+            fail("file not found; " + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("not supposed to get IO errors reading files");
+        }
 
-		/*
-		 * now run through the Document's elements and assign (add) ID
-		 * attributes
-		 */
+        if (str == null) {
+            // in real life, we would throw a real Exception?
+            fail("failed to actually read anything! Empty file? Bad!");
+        }
 
-		XmlUtils.addIDs(doc);
+        doc = XmlUtils.xmlStringToDOM(str);
 
-		/*
-		 * I'd like a more isolated way to test this, as using the Index to
-		 * assess it introduces a second variant. For a preliminary check, just
-		 * count the ids, and check against the number of Elements.
-		 */
+        // TODO do a verification that the document has type ID defined? In
+        // fact, move this to XmlUtils.
 
-		NodeList list = doc.getElementsByTagName("*");
-		int length = list.getLength();
+        /*
+         * now run through the Document's elements and assign (add) ID
+         * attributes
+         */
 
-		int count = 0;
+        XmlUtils.addIDs(doc);
 
-		for (int i = 0; i < length; i++) {
-			Element element = (Element) list.item(i);
+        /*
+         * I'd like a more isolated way to test this, as using the Index to
+         * assess it introduces a second variant. For a preliminary check,
+         * just count the ids, and check against the number of Elements.
+         */
 
-			String id = element.getAttribute("id");
+        NodeList list = doc.getElementsByTagName("*");
+        int length = list.getLength();
 
-			if (!id.equals("")) {
-				count++;
-			}
-		}
-		assertEquals("The number of elements with IDs did not equal the number of elements!", length, count);
+        int count = 0;
 
-		//XmlUtils.debugPrintXml(doc);
-	}
+        for (int i = 0; i < length; i++) {
+            Element element = (Element) list.item(i);
 
-	public void testDocumentIndexConstructor() {
-		/*
-		 * Setup
-		 */
-		Document doc = null;
-		try {
-			String str = XmlUtils.fileToString(SOURCE_XML);
-			doc = XmlUtils.xmlStringToDOM(str);
-			XmlUtils.addIDs(doc);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
-		/*
-		 * The constructor we're testing in this Unit test
-		 */
-		ElementIndex index = new ElementIndex(doc);
+            String id = element.getAttribute("id");
 
-		/*
-		 * Evaluate the result.
-		 */
-		HashSet set = new HashSet();
-		int num = doc.getElementsByTagName("*").getLength();
+            if (!id.equals("")) {
+                count++;
+            }
+        }
+        assertEquals("The number of elements with IDs did not equal the number of elements!", length,
+                count);
 
-		for (int i = 0; i < num; i++) {
-			// According to DOM spec, ID is a String. Worse, according to the
-			// xmllint program, ID must be alphanumeric, not just numeric!
-			// HARDCODE so construct an index by the same scheme
-			// used in XmlUtils.AddXmlIds()
-			String id = "n" + i;
+        // XmlUtils.debugPrintXml(doc);
+    }
 
-			Element element = index.getElementById(id);
+    public void testDocumentIndexConstructor() {
+        /*
+         * Setup
+         */
+        Document doc = null;
+        try {
+            String str = XmlUtils.fileToString(SOURCE_XML);
+            doc = XmlUtils.xmlStringToDOM(str);
+            XmlUtils.addIDs(doc);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        /*
+         * The constructor we're testing in this Unit test
+         */
+        ElementIndex index = new ElementIndex(doc);
 
-			if (element == null) {
-				fail("we asked for id " + id + " but got null back, indicating it wasn't actually there");
-			}
+        /*
+         * Evaluate the result.
+         */
+        HashSet set = new HashSet();
+        int num = doc.getElementsByTagName("*").getLength();
 
-			/*
-			 * the test is that we assume that each Element Object (Objects are
-			 * pointers) will only be returned once. So we stick the returned
-			 * Elements into the Set, and if any such add operation returns true
-			 * (indicating that object is already present), then we fail out.
-			 * Given the Map semantics underlying ElementIndex, I can't imagine
-			 * this happening anymore - it's an old test. In fact, in view of
-			 * the exception being thrown in the constructor of ElementIndex, I
-			 * think this is deprecated.
-			 */
-			if (set.add(element) == false) {
-				fail("an element already fetched by ID, " + id + ", was returned a second time");
-			}
-		}
-		if (set.size() != num) {
-			fail("in counting the IDs in the ElementIndex we didn't match the number of elements.");
-		}
+        for (int i = 0; i < num; i++) {
+            // According to DOM spec, ID is a String. Worse, according to the
+            // xmllint program, ID must be alphanumeric, not just numeric!
+            // HARDCODE so construct an index by the same scheme
+            // used in XmlUtils.AddXmlIds()
+            String id = "n" + i;
 
-	}
+            Element element = index.getElementById(id);
+
+            if (element == null) {
+                fail("we asked for id " + id + " but got null back, indicating it wasn't actually there");
+            }
+
+            /*
+             * the test is that we assume that each Element Object (Objects
+             * are pointers) will only be returned once. So we stick the
+             * returned Elements into the Set, and if any such add operation
+             * returns true (indicating that object is already present), then
+             * we fail out. Given the Map semantics underlying ElementIndex, I
+             * can't imagine this happening anymore - it's an old test. In
+             * fact, in view of the exception being thrown in the constructor
+             * of ElementIndex, I think this is deprecated.
+             */
+            if (set.add(element) == false) {
+                fail("an element already fetched by ID, " + id + ", was returned a second time");
+            }
+        }
+        if (set.size() != num) {
+            fail("in counting the IDs in the ElementIndex we didn't match the number of elements.");
+        }
+
+    }
 }

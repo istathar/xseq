@@ -2,13 +2,13 @@
  * ProcedureUserInterface.java
  * 
  * See LICENCE file for usage and redistribution terms
- * Copyright (c) 2004-2005 Operational Dynamics
+ * Copyright (c) 2004-2005, 2008 Operational Dynamics
  */
 package xseq.ui;
 
 import generic.util.Debug;
 
-import org.gnu.gtk.Gtk;
+import org.gnome.gtk.Gtk;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -24,361 +24,368 @@ import xseq.domain.State;
  */
 public class ProcedureUserInterface
 {
-	public OverviewWindow		_overview	= null;
-	public DetailsWindow		_details	= null;
-	private QuickButtonsWindow	_quick		= null;
+    public OverviewWindow _overview = null;
 
-	// used to govern what is displayed in the various status windows, and are
-	// keyed by the activate* methods.
-	private int					_currentSection;
-	private int					_numSections;
+    public DetailsWindow _details = null;
 
-	// hold a reference to the Procedure that this UI is currently
-	// displaying.
-	public Procedure			_procedure;
+    private QuickButtonsWindow _quick = null;
 
-	public String				_currentStepId;
+    // used to govern what is displayed in the various status windows, and are
+    // keyed by the activate* methods.
+    private int _currentSection;
 
-	// which participant am I?
-	private String				_whoAmI;
-	// used when I have a current task.
-	private String				_myCurrentTaskId;
-	private int					_myCurrentState;
+    private int _numSections;
 
-	/**
-	 * Instantiate the various windows that comprise the UI.
-	 * 
-	 * @param p
-	 *            The Procedure to be instantiated
-	 */
-	public ProcedureUserInterface(Procedure p) {
-		this._procedure = p;
+    // hold a reference to the Procedure that this UI is currently
+    // displaying.
+    public Procedure _procedure;
 
-		Document dom = p.getDOM();
-		NodeList sections = dom.getElementsByTagName("section");
-		_currentSection = 0;
-		_numSections = sections.getLength();
+    public String _currentStepId;
 
-		_currentStepId = null;
-		_myCurrentTaskId = null;
-		_myCurrentState = -1;
+    // which participant am I?
+    private String _whoAmI;
 
-		_overview = new OverviewWindow(p);
-		_details = new DetailsWindow(p);
-		_quick = new QuickButtonsWindow();
+    // used when I have a current task.
+    private String _myCurrentTaskId;
 
-		_details.initialGrabFocus();
-	}
+    private int _myCurrentState;
 
-	/**
-	 * Call in points for moving the UI around the sections of a procedure.
-	 */
+    /**
+     * Instantiate the various windows that comprise the UI.
+     * 
+     * @param p
+     *            The Procedure to be instantiated
+     */
+    public ProcedureUserInterface(Procedure p) {
+        this._procedure = p;
 
-	public void activatePrevSection() {
-		_currentSection--;
-		activateSection();
-	}
+        Document dom = p.getDOM();
+        NodeList sections = dom.getElementsByTagName("section");
+        _currentSection = 0;
+        _numSections = sections.getLength();
 
-	public void activateCurrentSection() {
-		/*
-		 * This is repeatitive - we end up doing almost the same code again
-		 * below.
-		 */
-		if (_currentStepId == null) {
-			_currentSection = 0;
-		} else {
-			String currentSectionId = _procedure.getParentId(_currentStepId, "section");
+        _currentStepId = null;
+        _myCurrentTaskId = null;
+        _myCurrentState = -1;
 
-			Document dom = _procedure.getDOM();
-			NodeList sections = dom.getElementsByTagName("section");
+        _overview = new OverviewWindow(p);
+        _details = new DetailsWindow(p);
+        _quick = new QuickButtonsWindow();
 
-			for (int i = 0; i < _numSections; i++) {
-				Element section = (Element) sections.item(i);
-				if (section.getAttribute("id").equals(currentSectionId)) {
-					_currentSection = i;
-				}
-			}
-		}
-		activateSection();
-	}
+        _details.initialGrabFocus();
+    }
 
-	public void activateNextSection() {
-		_currentSection++;
-		activateSection();
-	}
+    /**
+     * Call in points for moving the UI around the sections of a procedure.
+     */
 
-	public void activateSection(int i) {
-		_currentSection = i;
-		activateSection();
-	}
+    public void activatePrevSection() {
+        _currentSection--;
+        activateSection();
+    }
 
-	/**
-	 * Display the section that contains (is) a specified ID
-	 */
-	public void activateSection(String id) {
-		String sectionId = _procedure.getParentId(id, "section");
+    public void activateCurrentSection() {
+        /*
+         * This is repeatitive - we end up doing almost the same code again
+         * below.
+         */
+        if (_currentStepId == null) {
+            _currentSection = 0;
+        } else {
+            String currentSectionId = _procedure.getParentId(_currentStepId, "section");
 
-		Document dom = _procedure.getDOM();
-		NodeList sections = dom.getElementsByTagName("section");
-		for (int i = 0; i < _numSections; i++) {
-			Element section = (Element) sections.item(i);
-			if (section.getAttribute("id").equals(sectionId)) {
-				activateSection(i);
-				return;
-			}
-		}
-	}
+            Document dom = _procedure.getDOM();
+            NodeList sections = dom.getElementsByTagName("section");
 
-	/**
-	 * Activate what is set in _currentSection.
-	 */
-	private void activateSection() {
-		/*
-		 * bounds check, including the perfectly normal cases of trying to go
-		 * too far. It's here, just so we can generalize the logic for use in
-		 * other events rather than the next/previous case of the toolbuttons.
-		 */
-		if (_currentSection <= 0) {
-			_currentSection = 0;
-		} else if (_currentSection >= (_numSections - 1)) {
-			_currentSection = (_numSections - 1); //annoying, zero origin...
-		}
+            for (int i = 0; i < _numSections; i++) {
+                Element section = (Element) sections.item(i);
+                if (section.getAttribute("id").equals(currentSectionId)) {
+                    _currentSection = i;
+                }
+            }
+        }
+        activateSection();
+    }
 
-		boolean isCurrentStepInSection = false;
+    public void activateNextSection() {
+        _currentSection++;
+        activateSection();
+    }
 
-		if (_currentStepId == null) {
-			if (_currentSection == 0) {
-				isCurrentStepInSection = true;
-			}
-		} else {
-			String currentSectionId = _procedure.getParentId(_currentStepId, "section");
+    public void activateSection(int i) {
+        _currentSection = i;
+        activateSection();
+    }
 
-			Document dom = _procedure.getDOM();
-			NodeList sections = dom.getElementsByTagName("section");
+    /**
+     * Display the section that contains (is) a specified ID
+     */
+    public void activateSection(String id) {
+        String sectionId = _procedure.getParentId(id, "section");
 
-			Element section = (Element) sections.item(_currentSection);
-			if (section.getAttribute("id").equals(currentSectionId)) {
-				isCurrentStepInSection = true;
-			}
-		}
+        Document dom = _procedure.getDOM();
+        NodeList sections = dom.getElementsByTagName("section");
+        for (int i = 0; i < _numSections; i++) {
+            Element section = (Element) sections.item(i);
+            if (section.getAttribute("id").equals(sectionId)) {
+                activateSection(i);
+                return;
+            }
+        }
+    }
 
-		/*
-		 * and now, finally, realize it.
-		 */
-		_details.activateSection(_currentSection, isCurrentStepInSection);
-		_overview.activateSection(_currentSection, isCurrentStepInSection);
-	}
+    /**
+     * Activate what is set in _currentSection.
+     */
+    private void activateSection() {
+        /*
+         * bounds check, including the perfectly normal cases of trying to go
+         * too far. It's here, just so we can generalize the logic for use in
+         * other events rather than the next/previous case of the toolbuttons.
+         */
+        if (_currentSection <= 0) {
+            _currentSection = 0;
+        } else if (_currentSection >= (_numSections - 1)) {
+            _currentSection = (_numSections - 1); // annoying, zero
+            // origin...
+        }
 
-	public void setUser(String who) {
-		// TODO validation of input
-		// TODO authentication of some sort?
-		this._whoAmI = who;
+        boolean isCurrentStepInSection = false;
 
-	}
+        if (_currentStepId == null) {
+            if (_currentSection == 0) {
+                isCurrentStepInSection = true;
+            }
+        } else {
+            String currentSectionId = _procedure.getParentId(_currentStepId, "section");
 
-	public String getUser() {
-		return this._whoAmI;
-	}
+            Document dom = _procedure.getDOM();
+            NodeList sections = dom.getElementsByTagName("section");
 
-	/**
-	 * This is the entry point called by event handlers. It simply calls
-	 * setButtonState(), unless this is an event is marking a task as done, then
-	 * we propagate that information as well.
-	 */
-	public void setMyState(int state) {
-		Debug.print("events", "asked for state " + state + ", ui state was " + _myCurrentState);
-		if (_myCurrentState != state) {
-			Debug.print("events", "so decided to setButtonState()");
-			/*
-			 * This prevents the return trips from calling this again.
-			 */
-			_myCurrentState = state;
+            Element section = (Element) sections.item(_currentSection);
+            if (section.getAttribute("id").equals(currentSectionId)) {
+                isCurrentStepInSection = true;
+            }
+        }
 
-			/*
-			 * DUE TO SECOND SET OF StateButtons, THIS CAUSES RECURSION BACK TO
-			 * THIS METHOD!!!
-			 */
-			setButtonState(state);
+        /*
+         * and now, finally, realize it.
+         */
+        _details.activateSection(_currentSection, isCurrentStepInSection);
+        _overview.activateSection(_currentSection, isCurrentStepInSection);
+    }
 
-			/*
-			 * As this can (does) get called multiple times; we use
-			 * _currentTaskId being set as the marker that it actually needs
-			 * action.
-			 */
-			if ((state == State.DONE) && (_myCurrentTaskId != null)) {
-				Debug.print("events", "further, ui decided to call setTaskAsDone(" + _myCurrentTaskId + ")");
-				setTaskAsDone(_myCurrentTaskId);
-			}
-		} else {
-			Debug.print("events", "No action needed");
-		}
-		Debug.print("events", "ui state now " + _myCurrentState);
-	}
+    public void setUser(String who) {
+        // TODO validation of input
+        // TODO authentication of some sort?
+        this._whoAmI = who;
 
-	/**
-	 * Send the appropriate signals to the various windows that have
-	 * StateButtons displayed. There is a check on the buttons' side to only
-	 * take action if they are not, in fact, active.
-	 */
-	private void setButtonState(int state) {
-		_details._stateButtons.activate(state);
-		_quick._stateButtons.activate(state);
-	}
+    }
 
-	/**
-	 * Entry point to order initiation of a Procedure.
-	 * 
-	 * <P>
-	 * TODO start timers (record timestamps somewhere?)
-	 */
-	public void startProcedure() {
-		_details._top.getWindow().raise();
-		/*
-		 * Get user back to beginning.
-		 */
-		activateSection(0);
+    public String getUser() {
+        return this._whoAmI;
+    }
 
-		/*
-		 * Set first <step> as current.
-		 */
-		String firstTaskId = _procedure.getFirstTaskId("n0");
-		String firstStepId = _procedure.getParentId(firstTaskId, "step");
+    /**
+     * This is the entry point called by event handlers. It simply calls
+     * setButtonState(), unless this is an event is marking a task as done,
+     * then we propagate that information as well.
+     */
+    public void setMyState(int state) {
+        Debug.print("events", "asked for state " + state + ", ui state was " + _myCurrentState);
+        if (_myCurrentState != state) {
+            Debug.print("events", "so decided to setButtonState()");
+            /*
+             * This prevents the return trips from calling this again.
+             */
+            _myCurrentState = state;
 
-		startStep(firstStepId);
-	}
+            /*
+             * DUE TO SECOND SET OF StateButtons, THIS CAUSES RECURSION BACK
+             * TO THIS METHOD!!!
+             */
+            setButtonState(state);
 
-	/**
-	 * TODO is this "porcedure is finished"? Or "regardless of state, stop this
-	 * damn thing"?
-	 * <P>
-	 * TODO stop timers
-	 */
-	public void stopProcedure() {
-		_currentStepId = null;
-	}
+            /*
+             * As this can (does) get called multiple times; we use
+             * _currentTaskId being set as the marker that it actually needs
+             * action.
+             */
+            if ((state == State.DONE) && (_myCurrentTaskId != null)) {
+                Debug.print("events", "further, ui decided to call setTaskAsDone(" + _myCurrentTaskId
+                        + ")");
+                setTaskAsDone(_myCurrentTaskId);
+            }
+        } else {
+            Debug.print("events", "No action needed");
+        }
+        Debug.print("events", "ui state now " + _myCurrentState);
+    }
 
-	/**
-	 * Assumed that the step is not already marked done...
-	 * 
-	 * @param stepId
-	 *            the id of the step to show as current.
-	 */
-	private void startStep(String stepId) {
-		_currentStepId = stepId;
-		_details.showStepAsCurrent(stepId);
+    /**
+     * Send the appropriate signals to the various windows that have
+     * StateButtons displayed. There is a check on the buttons' side to only
+     * take action if they are not, in fact, active.
+     */
+    private void setButtonState(int state) {
+        _details._stateButtons.activate(state);
+        _quick._stateButtons.activate(state);
+    }
 
-		String taskId = _procedure.getFirstTaskId(stepId, _whoAmI);
-		if (taskId != null) {
-			startMyTask(taskId);
-		}
-	}
+    /**
+     * Entry point to order initiation of a Procedure.
+     * 
+     * <P>
+     * TODO start timers (record timestamps somewhere?)
+     */
+    public void startProcedure() {
+        _details._top.present();
+        /*
+         * Get user back to beginning.
+         */
+        activateSection(0);
 
-	/**
-	 * Used to fire up a task, specifically if it belongs to this user.
-	 * 
-	 * @param taskId
-	 *            a task ID string, assumed to belong to _who.
-	 */
-	public void startMyTask(String taskId) {
-		_myCurrentTaskId = taskId;
-		_details.showTaskAsCurrent(taskId);
-		_details._top.present();
-		setButtonState(State.WORKING);
-	}
+        /*
+         * Set first <step> as current.
+         */
+        String firstTaskId = _procedure.getFirstTaskId("n0");
+        String firstStepId = _procedure.getParentId(firstTaskId, "step");
 
-	/**
-	 * Centralized entry point to mark a tast as done and to instruct the UI to
-	 * update the relevent displays accordingly.
-	 * 
-	 * <P>
-	 * It seems that the actual direct action of updating the Procedure should
-	 * be somewhere else... but then, maybe the _procedure should be held
-	 * somewhere else. Then again, they're all references, so who cares. This is
-	 * an (the?) instance class for the client, and it's a event driven user
-	 * interface.
-	 * 
-	 * @param taskId
-	 *            The task which is to be set as done.
-	 */
-	public void setTaskAsDone(String taskId) {
-		Document doc = _procedure.getDOM();
+        startStep(firstStepId);
+    }
 
-		// in case it was mine...
-		if (_procedure.isTaskMine(taskId, _whoAmI)) {
-			_myCurrentTaskId = null;
-		}
+    /**
+     * TODO is this "porcedure is finished"? Or "regardless of state, stop
+     * this damn thing"?
+     * <P>
+     * TODO stop timers
+     */
+    public void stopProcedure() {
+        _currentStepId = null;
+    }
 
-		/*
-		 * Update the DOM tree; conveniently returns the next Task in line (or
-		 * null) the consequences of which we deal with below.
-		 */
-		String nextTaskId = _procedure.setTaskAsDone(taskId);
+    /**
+     * Assumed that the step is not already marked done...
+     * 
+     * @param stepId
+     *            the id of the step to show as current.
+     */
+    private void startStep(String stepId) {
+        _currentStepId = stepId;
+        _details.showStepAsCurrent(stepId);
 
-		/*
-		 * Update the UI for this task
-		 */
-		_details.showTaskAsDone(taskId);
+        String taskId = _procedure.getFirstTaskId(stepId, _whoAmI);
+        if (taskId != null) {
+            startMyTask(taskId);
+        }
+    }
 
-		/*
-		 * Start working through what else has to change as a consequence of
-		 * this task being done.
-		 */
-		if (nextTaskId == null) {
-			// this is functionally equivalent to calling isNameDone(). Do we
-			// need to call that anyway?
+    /**
+     * Used to fire up a task, specifically if it belongs to this user.
+     * 
+     * @param taskId
+     *            a task ID string, assumed to belong to _who.
+     */
+    public void startMyTask(String taskId) {
+        _myCurrentTaskId = taskId;
+        _details.showTaskAsCurrent(taskId);
+        _details._top.present();
+        setButtonState(State.WORKING);
+    }
 
-			if (_procedure.isStepDone(taskId)) {
-				String stepId = _procedure.getParentId(taskId, "step");
-				_details.showStepAsDone(stepId);
-				setButtonState(State.STANDBY);
+    /**
+     * Centralized entry point to mark a tast as done and to instruct the UI
+     * to update the relevent displays accordingly.
+     * 
+     * <P>
+     * It seems that the actual direct action of updating the Procedure should
+     * be somewhere else... but then, maybe the _procedure should be held
+     * somewhere else. Then again, they're all references, so who cares. This
+     * is an (the?) instance class for the client, and it's a event driven
+     * user interface.
+     * 
+     * @param taskId
+     *            The task which is to be set as done.
+     */
+    public void setTaskAsDone(String taskId) {
+        Document doc = _procedure.getDOM();
 
-				/*
-				 * Fire up the next step
-				 */
-				String nextStepId = _procedure.getNextStepId(stepId);
-				if (nextStepId == null) {
-					if (_procedure.isProcedureDone(taskId)) {
-						stopProcedure();
-						return;
-					}
-				} else {
-					startStep(nextStepId);
-				}
+        // in case it was mine...
+        if (_procedure.isTaskMine(taskId, _whoAmI)) {
+            _myCurrentTaskId = null;
+        }
 
-				/*
-				 * taskId is still the old, just completed one - this is
-				 * backwards here so that the logic controlling the CurrentStep
-				 * buttons (which relies on currentStepId) will work as we cross
-				 * section boundaries.
-				 */
+        /*
+         * Update the DOM tree; conveniently returns the next Task in line (or
+         * null) the consequences of which we deal with below.
+         */
+        String nextTaskId = _procedure.setTaskAsDone(taskId);
 
-				if (_procedure.isSectionDone(taskId)) {
-					// This seems silly, but it's necessary to get to the
-					// current section page before advancing one.
-					activateSection(taskId);
-					activateNextSection();
-				}
-			}
+        /*
+         * Update the UI for this task
+         */
+        _details.showTaskAsDone(taskId);
 
-		} else {
-			if (_procedure.isTaskMine(nextTaskId, _whoAmI)) {
-				startMyTask(nextTaskId);
-			}
-		}
-	}
+        /*
+         * Start working through what else has to change as a consequence of
+         * this task being done.
+         */
+        if (nextTaskId == null) {
+            // this is functionally equivalent to calling isNameDone(). Do we
+            // need to call that anyway?
 
-	/**
-	 * Be aware that calling this you should expect to loose exectution control
-	 * as this will cause the Gtk.main() loop to exit and control to go to the
-	 * statement following it. Some threads may in fact return here, so you
-	 * should not follow a call to shutdown() with any code and let methods
-	 * return immediately following the call.
-	 */
-	public void shutdown() {
-		// TODO attempt to free any instantiated Windows, close network
-		// connections, and what not.
-		Gtk.mainQuit();
-		// it's somewhat indeterminate about whether exectution control will
-		// ever return here; in any case we don't [need to] depend on it.
-	}
+            if (_procedure.isStepDone(taskId)) {
+                String stepId = _procedure.getParentId(taskId, "step");
+                _details.showStepAsDone(stepId);
+                setButtonState(State.STANDBY);
+
+                /*
+                 * Fire up the next step
+                 */
+                String nextStepId = _procedure.getNextStepId(stepId);
+                if (nextStepId == null) {
+                    if (_procedure.isProcedureDone(taskId)) {
+                        stopProcedure();
+                        return;
+                    }
+                } else {
+                    startStep(nextStepId);
+                }
+
+                /*
+                 * taskId is still the old, just completed one - this is
+                 * backwards here so that the logic controlling the
+                 * CurrentStep buttons (which relies on currentStepId) will
+                 * work as we cross section boundaries.
+                 */
+
+                if (_procedure.isSectionDone(taskId)) {
+                    // This seems silly, but it's necessary to get to the
+                    // current section page before advancing one.
+                    activateSection(taskId);
+                    activateNextSection();
+                }
+            }
+
+        } else {
+            if (_procedure.isTaskMine(nextTaskId, _whoAmI)) {
+                startMyTask(nextTaskId);
+            }
+        }
+    }
+
+    /**
+     * Be aware that calling this you should expect to loose exectution
+     * control as this will cause the Gtk.main() loop to exit and control to
+     * go to the statement following it. Some threads may in fact return here,
+     * so you should not follow a call to shutdown() with any code and let
+     * methods return immediately following the call.
+     */
+    public void shutdown() {
+        // TODO attempt to free any instantiated Windows, close network
+        // connections, and what not.
+        Gtk.mainQuit();
+        // it's somewhat indeterminate about whether exectution control will
+        // ever return here; in any case we don't [need to] depend on it.
+    }
 }
