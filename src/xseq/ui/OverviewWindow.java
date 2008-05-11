@@ -42,17 +42,19 @@ import xseq.domain.Procedure;
  */
 public class OverviewWindow
 {
-    XML _glade = null;
+    private XML glade = null;
 
-    Window _top = null;
+    private Window top = null;
 
-    TreeView _view = null;
+    private DataColumnString summary_DataColumn;
 
-    ToolButton _prev_toolbutton = null;
+    private TreeView view = null;
 
-    ToolButton _current_toolbutton = null;
+    private ToolButton prev_toolbutton = null;
 
-    ToolButton _next_toolbutton = null;
+    private ToolButton current_toolbutton = null;
+
+    private ToolButton next_toolbutton = null;
 
     private int _numSections;
 
@@ -63,32 +65,28 @@ public class OverviewWindow
      * get/setModels, and move the create code below elsewhere.]
      */
 
-    // the instantiated TreeModel (as impleneted by
-    // ListStore). Doesn't need to be static, for if we
-    // ever do instantiate another OverviewWindow, we can just give it the
-    // same
-    // model (via a set) having get'd it from here.
-    // awkward name, but it needs to be identifiable otherwise the setValue
-    // calls are gibberish; this API is horrid enough as it is; its ok here,
-    // but in any table with multiple columns it quickly gets right out of
-    // hand.
-    ListStore _sectionModel = null;
+    /*
+     * The instantiated TreeModel (as impleneted by ListStore). Doesn't need
+     * to be static, for if we ever do instantiate another OverviewWindow, we
+     * can just give it the same model (via a set) having get'd it from here.
+     * awkward name, but it needs to be identifiable otherwise the setValue
+     * calls are gibberish; this API is horrid enough as it is; its ok here,
+     * but in any table with multiple columns it quickly gets right out of
+     * hand.
+     */
+    private ListStore sectionModel = null;
 
-    DataColumn[] _sectionDataColumns = null;
-
-    TreeViewColumn[] _sectionTreeViewColumns = null;
+    private TreeViewColumn[] sectionTreeViewColumns = null;
 
     OverviewWindow() {
         /*
          * Setup the underlying TreeModel
          */
-        DataColumnString summary_DataColumn = new DataColumnString();
+        summary_DataColumn = new DataColumnString();
 
-        _sectionDataColumns = new DataColumn[] {
+        sectionModel = new ListStore(new DataColumn[] {
             summary_DataColumn
-        };
-
-        _sectionModel = new ListStore(_sectionDataColumns);
+        });
     }
 
     /**
@@ -109,7 +107,7 @@ public class OverviewWindow
          */
 
         try {
-            _glade = Glade.parse("share/overview.glade", null);
+            glade = Glade.parse("share/overview.glade", null);
         } catch (FileNotFoundException e) {
             // If it can't find that glade file, we have an app
             // configuration problem or worse some UI bug, and need to abort.
@@ -119,10 +117,10 @@ public class OverviewWindow
             e.printStackTrace();
             ProcedureClient.abort("An internal error occured trying to read and process the glade file for the OverviewWindow.");
         }
-        _top = (Window) _glade.getWidget("overview");
-        _top.hide();
+        top = (Window) glade.getWidget("overview");
+        top.hide();
 
-        _top.connect(new Window.DELETE_EVENT() {
+        top.connect(new Window.DELETE_EVENT() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Debug.print("listeners", "calling end_program() to initiate app termination");
                 close_window();
@@ -130,15 +128,15 @@ public class OverviewWindow
             }
         });
 
-        _prev_toolbutton = (ToolButton) _glade.getWidget("prev_toolbutton");
-        _current_toolbutton = (ToolButton) _glade.getWidget("current_toolbutton");
-        _next_toolbutton = (ToolButton) _glade.getWidget("next_toolbutton");
+        prev_toolbutton = (ToolButton) glade.getWidget("prev_toolbutton");
+        current_toolbutton = (ToolButton) glade.getWidget("current_toolbutton");
+        next_toolbutton = (ToolButton) glade.getWidget("next_toolbutton");
 
-        _view = (TreeView) _glade.getWidget("summary_treeview");
-        _view.setModel(_sectionModel);
+        view = (TreeView) glade.getWidget("summary_treeview");
+        view.setModel(sectionModel);
 
-        TreeViewColumn viewColumn0 = _view.appendColumn();
-        _sectionTreeViewColumns = new TreeViewColumn[] {
+        TreeViewColumn viewColumn0 = view.appendColumn();
+        sectionTreeViewColumns = new TreeViewColumn[] {
             viewColumn0
         };
         // Nastiest API since EJB
@@ -146,41 +144,40 @@ public class OverviewWindow
         viewColumn0.setResizable(true);
         viewColumn0.setReorderable(false);
         CellRendererText renderer0 = new CellRendererText(viewColumn0);
-        renderer0.setMarkup(_sectionDataColumns[0]);
+        renderer0.setMarkup(summary_DataColumn);
 
-        _view.setRulesHint(true);
-        _view.setEnableSearch(true);
+        view.setRulesHint(true);
+        view.setEnableSearch(true);
         // this is the one that prevents the thing
         // turning into a drag n drop hierarchical
         // mess
-        _view.setReorderable(false);
+        view.setReorderable(false);
 
-        _view.connect(new TreeView.ROW_ACTIVATED() {
+        view.connect(new TreeView.ROW_ACTIVATED() {
             public void onRowActivated(TreeView source, TreePath path, TreeViewColumn vertical) {
-                TreePath cursorPath = event.getTreePath();
-                int i = Integer.parseInt(cursorPath.toString());
+                int i = Integer.parseInt(path.toString());
 
                 /*
                  * Quite often the DetailsWindow will have been obscured. So
                  * we present it.
                  */
-                ProcedureClient.ui._details._top.present();
+                ProcedureClient.ui._details.top.present();
                 ProcedureClient.ui.activateSection(i);
             }
         });
 
-        _top.resize(1, 400);
-        _top.move(10, 5);
+        top.resize(1, 400);
+        top.move(10, 5);
 
         /*
          * And start up at the first section.
          */
         activateSection(0, true);
-        _top.present();
+        top.present();
     }
 
     public void close_window() {
-        _top.hide();
+        top.hide();
         // TODO testing only. REMOVE
         if (ProcedureClient.ui != null) {
             ProcedureClient.ui.shutdown();
@@ -211,8 +208,8 @@ public class OverviewWindow
 
             String summary = sectionToPango(section);
 
-            TreeIter iter = _sectionModel.appendRow();
-            _sectionModel.setValue(iter, (DataColumnString) _sectionDataColumns[0], summary);
+            TreeIter iter = sectionModel.appendRow();
+            sectionModel.setValue(iter, summary_DataColumn, summary);
         }
     }
 
@@ -379,17 +376,17 @@ public class OverviewWindow
          * If we're now at the beginning, turn off the prev button
          */
         if (index == 0) {
-            _prev_toolbutton.setSensitive(false);
+            prev_toolbutton.setSensitive(false);
         } else {
-            _prev_toolbutton.setSensitive(true);
+            prev_toolbutton.setSensitive(true);
         }
         /*
          * If we're at now at the end, turn off the next button
          */
         if (index == (_numSections - 1)) {
-            _next_toolbutton.setSensitive(false);
+            next_toolbutton.setSensitive(false);
         } else {
-            _next_toolbutton.setSensitive(true);
+            next_toolbutton.setSensitive(true);
         }
 
         /*
@@ -397,9 +394,9 @@ public class OverviewWindow
          * need the "Current" button hot; otherwise we do.
          */
         if (containsCurrentStep) {
-            _current_toolbutton.setSensitive(false);
+            current_toolbutton.setSensitive(false);
         } else {
-            _current_toolbutton.setSensitive(true);
+            current_toolbutton.setSensitive(true);
         }
 
         /*
@@ -407,11 +404,8 @@ public class OverviewWindow
          * active section.
          */
         TreePath tp = new TreePath(Integer.toString(index));
-        // bizarely, this does strange things. Although it does seem to set
-        // the
-        // curson, it seems to scroll the window 1/2 a row past the line.
-        // Putting the scrollToCell call after makes it behave.
-        _view.setCursor(tp, _sectionTreeViewColumns[0], false);
-        _view.scrollToCell(tp, null);
+
+        view.getSelection().selectRow(tp);
+        view.scrollToCell(tp, null);
     }
 }

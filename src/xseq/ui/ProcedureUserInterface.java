@@ -228,7 +228,7 @@ public class ProcedureUserInterface
      * take action if they are not, in fact, active.
      */
     private void setButtonState(int state) {
-        _details._stateButtons.activate(state);
+        _details.stateButtons.activate(state);
         _quick._stateButtons.activate(state);
     }
 
@@ -239,7 +239,7 @@ public class ProcedureUserInterface
      * TODO start timers (record timestamps somewhere?)
      */
     public void startProcedure() {
-        _details._top.present();
+        _details.top.present();
         /*
          * Get user back to beginning.
          */
@@ -289,7 +289,7 @@ public class ProcedureUserInterface
     public void startMyTask(String taskId) {
         _myCurrentTaskId = taskId;
         _details.showTaskAsCurrent(taskId);
-        _details._top.present();
+        _details.top.present();
         setButtonState(State.WORKING);
     }
 

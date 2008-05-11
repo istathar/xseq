@@ -17,8 +17,9 @@ import org.gnome.gdk.Pixbuf;
 import org.gnome.glade.Glade;
 import org.gnome.glade.XML;
 import org.gnome.gtk.Button;
+import org.gnome.gtk.Dialog;
+import org.gnome.gtk.ErrorMessageDialog;
 import org.gnome.gtk.Label;
-import org.gnome.gtk.MessageType;
 import org.gnome.gtk.ProgressBar;
 import org.gnome.gtk.Widget;
 import org.gnome.gtk.Window;
@@ -200,7 +201,7 @@ public class JabberConnectionWindow extends Thread
 
     private void error(final String details) {
         Debug.print("threads", "(Worker) launching error dialog");
-        ModalDialog error = new ModalDialog("Unable to login to server", details, MessageType.ERROR);
+        Dialog error = new ErrorMessageDialog(_top, "Unable to login to server", details);
         error.run();
     }
 

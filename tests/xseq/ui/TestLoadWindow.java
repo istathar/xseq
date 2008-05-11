@@ -6,6 +6,7 @@
  */
 package xseq.ui;
 
+import static org.gnome.gtk.FileChooserAction.OPEN;
 import generic.util.DebugException;
 
 import java.io.FileNotFoundException;
@@ -62,7 +63,7 @@ public class TestLoadWindow
     public TestLoadWindow() {
 
         try {
-            _glade = Glade.parse("share/testload.glade", this);
+            _glade = Glade.parse("share/testload.glade", null);
         } catch (FileNotFoundException e) {
             // If it can't find that glade file, we have an app
             // configuration problem or worse some UI bug, and need to abort.
@@ -80,7 +81,7 @@ public class TestLoadWindow
         _top = (Window) _glade.getWidget("testload");
         _top.hide();
 
-        _chooser = (FileChooserDialog) _glade.getWidget("filechooser");
+        _chooser = new FileChooserDialog("Load Procedure", _top, OPEN);
         _chooser.hide();
 
         /*
@@ -114,7 +115,7 @@ public class TestLoadWindow
         _top.setIcon(construction_pixbuf);
 
         Image construction_image = (Image) _glade.getWidget("construction");
-        construction_image.set(construction_pixbuf);
+        construction_image.setImage(construction_pixbuf);
 
         Label title_lable = (Label) _glade.getWidget("title_label");
         title_lable.setLabel("<big><big>xseq version " + ProcedureClient.VERSION + "</big></big>");
@@ -124,13 +125,13 @@ public class TestLoadWindow
          * radios belong to - so get handles and reset it by hand here.
          */
         _builtin_radiobutton = (RadioButton) _glade.getWidget("builtin_radiobutton");
-        _builtin_radiobutton.setState(true);
+        _builtin_radiobutton.setActive(true);
         _specify_radiobutton = (RadioButton) _glade.getWidget("specify_radiobutton");
 
         _filename_entry = (Entry) _glade.getWidget("filename_entry");
         _filename_entry.connect(new Editable.CHANGED() {
             public void onChanged(Editable source) {
-                _specify_radiobutton.setState(true);
+                _specify_radiobutton.setActive(true);
             }
         });
 
@@ -181,7 +182,7 @@ public class TestLoadWindow
                          * file is in /home/andrew... show me the file I
                          * picked!)
                          */
-                        _filename_entry.setCursorPosition(newFilename.length());
+                        _filename_entry.setPosition(newFilename.length());
 
                         /*
                          * activate the specify radio button (nothing worse
@@ -199,9 +200,9 @@ public class TestLoadWindow
         _init_button.connect(new Button.CLICKED() {
             public void onClicked(Button source) {
                 String filename = null;
-                if (_builtin_radiobutton.getState() == true) {
+                if (_builtin_radiobutton.getActive() == true) {
                     filename = DEMO_SOURCE_DIR + "/" + DEMO_XML_FILE;
-                } else if (_specify_radiobutton.getState() == true) {
+                } else if (_specify_radiobutton.getActive() == true) {
                     filename = _filename_entry.getText();
                 } else {
                     throw new DebugException("Oops - managed to not have either radio button selected!");

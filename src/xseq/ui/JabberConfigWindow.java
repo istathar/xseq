@@ -126,7 +126,7 @@ public class JabberConfigWindow
         _top.setIcon(jabber_pixbuf);
 
         Image jabber_image = (Image) _glade.getWidget("jabber_image");
-        jabber_image.set(jabber_pixbuf);
+        jabber_image.setImage(jabber_pixbuf);
 
         /*
          * As characters are entered in the server and username fields, update
@@ -150,7 +150,7 @@ public class JabberConfigWindow
                 if (event.getType() == EntryEvent.Type.CHANGED) {
                 } else if (event.getType() == EntryEvent.Type.ACTIVATE) {
                     _apply_button.grabDefault();
-                    _apply_button.click();
+                    _apply_button.emitClicked();
                 }
             }
 

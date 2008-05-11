@@ -41,24 +41,24 @@ import xseq.domain.State;
  */
 public class StateButtons implements ToggleButton.TOGGLED
 {
-    Window _top = null;
+    Window top = null;
 
-    private ToggleButton[] _buttons = null;
+    private ToggleButton[] buttons = null;
 
-    private Image[] _images = null;
+    private Image[] images = null;
 
     // The Image and Button widgets are most certainly instance variables, but
     // the two pixbuf sets only need to be loaded once, hence class variables.
-    private static Pixbuf[] _offPixbufs = null;
+    private static Pixbuf[] offPixbufs = null;
 
-    private static Pixbuf[] _onPixbufs = null;
+    private static Pixbuf[] onPixbufs = null;
 
     // button depressed
-    private int _current;
+    private int current;
 
-    private boolean _setIcon = false;
+    private boolean setIcon = false;
 
-    private String _which = null;
+    private String which = null;
 
     /**
      * @param which
@@ -66,28 +66,28 @@ public class StateButtons implements ToggleButton.TOGGLED
      *            used for debugging output.
      */
     public StateButtons(String which) {
-        this._which = which;
+        this.which = which;
         /*
          * initialize arrays
          */
-        _buttons = new ToggleButton[State.NUM_BUTTONS];
-        _images = new Image[State.NUM_BUTTONS];
+        buttons = new ToggleButton[State.NUM_BUTTONS];
+        images = new Image[State.NUM_BUTTONS];
 
         /*
          * Load the button images
          */
         // we don't do this in a static {...} block because we need Gtk
         // initialized.
-        if (_offPixbufs == null) {
-            _offPixbufs = new Pixbuf[State.NUM_BUTTONS];
-            _onPixbufs = new Pixbuf[State.NUM_BUTTONS];
+        if (offPixbufs == null) {
+            offPixbufs = new Pixbuf[State.NUM_BUTTONS];
+            onPixbufs = new Pixbuf[State.NUM_BUTTONS];
 
             for (int i = 0; i < State.NUM_BUTTONS; i++) {
 
                 try {
-                    _offPixbufs[i] = new Pixbuf("share/pixmaps/" + State.colours[i]
+                    offPixbufs[i] = new Pixbuf("share/pixmaps/" + State.colours[i]
                             + "statebutton-solid.png");
-                    _onPixbufs[i] = new Pixbuf("share/pixmaps/" + State.colours[i]
+                    onPixbufs[i] = new Pixbuf("share/pixmaps/" + State.colours[i]
                             + "statebutton-full.png");
                 } catch (FileNotFoundException e1) {
                     ProcedureClient.abort("Can't find required image" + e1.getMessage());
@@ -99,7 +99,7 @@ public class StateButtons implements ToggleButton.TOGGLED
          * This means the first signal to come in will cause an activate
          * event.
          */
-        _current = -1;
+        current = -1;
     }
 
     /**
@@ -115,7 +115,7 @@ public class StateButtons implements ToggleButton.TOGGLED
          * ProcedureUserInterface that calls this results in a crazy cascade
          * of yet more events. Avoid this by returning if we're already set.
          */
-        if (_buttons[state].getState()) {
+        if (buttons[state].getActive()) {
             return;
         }
 
@@ -124,28 +124,28 @@ public class StateButtons implements ToggleButton.TOGGLED
          */
         // Debug.print("listeners", _which + " sensistive all buttons");
         for (int i = 0; i < State.NUM_BUTTONS; i++) {
-            _buttons[i].setSensitive(true);
+            buttons[i].setSensitive(true);
         }
 
         /*
          * Toggle the button
          */
         // Debug.print("listeners", _which + " set " + state + " true");
-        _buttons[state].setState(true);
+        buttons[state].setActive(true);
 
         /*
          * Reset the sensitives
          */
         // Debug.print("listeners", _which + " reset sensistives");
         if (state == State.STANDBY) {
-            _buttons[0].setSensitive(true);
+            buttons[0].setSensitive(true);
             for (int i = 1; i < State.NUM_BUTTONS; i++) {
-                _buttons[i].setSensitive(false);
+                buttons[i].setSensitive(false);
             }
         } else {
-            _buttons[0].setSensitive(false);
+            buttons[0].setSensitive(false);
             for (int i = 1; i < State.NUM_BUTTONS; i++) {
-                _buttons[i].setSensitive(true);
+                buttons[i].setSensitive(true);
             }
         }
     }
@@ -179,20 +179,20 @@ public class StateButtons implements ToggleButton.TOGGLED
         /*
          * Store our reference to it
          */
-        _buttons[index] = button;
+        buttons[index] = button;
 
         /*
          * Construct the Image, with an initial pixbuf, and add it to the
          * ToggleButton
          */
-        _images[index] = new Image(_offPixbufs[index]);
+        images[index] = new Image(offPixbufs[index]);
 
-        button.add(_images[index]);
+        button.add(images[index]);
 
         /*
          * Add the listener which contains the RadioAction type logic
          */
-        button.addListener(this);
+        button.connect(this);
     }
 
     /**
@@ -224,7 +224,7 @@ public class StateButtons implements ToggleButton.TOGGLED
          */
 
         Widget w = button.getChild();
-        System.out.println("DEBUG: w is a " + w.getName());
+        System.out.println("DEBUG: w is a " + w.toString());
 
         ToggleButton tb = (ToggleButton) button.getChild();
 
@@ -233,17 +233,17 @@ public class StateButtons implements ToggleButton.TOGGLED
         /*
          * Our reference to the actual ToggleButton
          */
-        _buttons[index] = tb;
+        buttons[index] = tb;
 
         /*
          * Constuct the Image, with an initial (off) pixbuf. Because
          * ToolButtons are implemented as composites with VBox( ; Label ), we
          * add to the VBox and push the Image to the top.
          */
-        _images[index] = new Image(_offPixbufs[index]);
+        images[index] = new Image(offPixbufs[index]);
 
-        vbox.packStart(_images[index]);
-        vbox.reorderChild(_images[index], 0);
+        vbox.packStart(images[index]);
+        vbox.reorderChild(images[index], 0);
 
         /*
          * Now that _buttons and _index are set, add the listener to implement
@@ -274,14 +274,14 @@ public class StateButtons implements ToggleButton.TOGGLED
          * Figure out which button the signal came from
          */
         for (int i = 0; i < State.NUM_BUTTONS; i++) {
-            if (event.getSource() == _buttons[i]) {
+            if (source == buttons[i]) {
                 index = i;
-                Debug.print("listeners", _which + " " + State.colours[i]
-                        + " received TOGGLE event, state now " + _buttons[i].getState() + ". I "
-                        + (index == _current ? "am" : "am not") + " current.");
+                Debug.print("listeners", which + " " + State.colours[i]
+                        + " received TOGGLE event, state now " + buttons[i].getActive() + ". I "
+                        + (index == current ? "am" : "am not") + " current.");
             }
         }
-        toggle = _buttons[index];
+        toggle = buttons[index];
 
         /*
          * If the toggle signal came from the currently active widget, then it
@@ -292,26 +292,26 @@ public class StateButtons implements ToggleButton.TOGGLED
          * If a different widget is active, then we activate this button, and
          * send a signal to the active one to disengage.
          */
-        if (index == _current) {
-            if (toggle.getState() == false) {
+        if (index == current) {
+            if (toggle.getActive() == false) {
                 /*
                  * ie, if I got unclicked...
                  */
-                Debug.print("listeners", _which + " ...sending click to " + State.colours[index]
+                Debug.print("listeners", which + " ...sending click to " + State.colours[index]
                         + " to counteract");
                 // aka click(); generates TOGGLE signal
-                toggle.setState(true);
+                toggle.setActive(true);
             } else {
                 // stay activated; ignore
             }
         } else {
-            if (toggle.getState() == true) {
+            if (toggle.getActive() == true) {
                 /*
                  * ie, I'm not the current button, some other is, and I'm
                  * being told to activate.
                  */
-                int old = _current;
-                _current = index;
+                int old = current;
+                current = index;
                 /*
                  * Having changed the _current index deactivate
                  * [setState(false), which generates a click/toggle] the old
@@ -323,35 +323,35 @@ public class StateButtons implements ToggleButton.TOGGLED
                 // (initial conditions safety check)
                 if ((old >= 0) && (old < State.NUM_BUTTONS)) {
                     // aka click(); generates TOGGLE signal
-                    _buttons[old].setState(false);
+                    buttons[old].setActive(false);
                 }
                 /*
                  * Then, when contol returns here, change my graphic to be
                  * "on".
                  */
-                Debug.print("listeners", _which + " " + State.colours[index]
+                Debug.print("listeners", which + " " + State.colours[index]
                         + " ...activating with full image");
-                _images[index].set(_onPixbufs[index]);
+                images[index].setImage(onPixbufs[index]);
 
                 /*
                  * And, for cosmetic fun, set the Window icon to the current
                  * graphic
                  */
-                if (_setIcon) {
-                    _top.setIcon(_onPixbufs[index]);
+                if (setIcon) {
+                    top.setIcon(onPixbufs[index]);
                 }
 
                 /*
                  * Send the signal to any other StateButtons out there. (one
                  * will end up back here, and be ignored)
                  */
-                Debug.print("events", _which + " " + State.colours[index] + " calling ui.setMyState("
+                Debug.print("events", which + " " + State.colours[index] + " calling ui.setMyState("
                         + index + ")");
                 ProcedureClient.ui.setMyState(index);
             } else {
-                Debug.print("listeners", _which + " " + State.colours[index]
+                Debug.print("listeners", which + " " + State.colours[index]
                         + "...deactivating with outline image");
-                _images[index].set(_offPixbufs[index]);
+                images[index].setImage(offPixbufs[index]);
             }
         }
     }
@@ -366,7 +366,7 @@ public class StateButtons implements ToggleButton.TOGGLED
         if (top == null) {
             throw new DebugException("passed a null top Window object");
         }
-        _top = top;
-        _setIcon = true;
+        this.top = top;
+        setIcon = true;
     }
 }

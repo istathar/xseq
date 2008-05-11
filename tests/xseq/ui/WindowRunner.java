@@ -11,8 +11,10 @@ import generic.util.Debug;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.gnome.gtk.Dialog;
+import org.gnome.gtk.ErrorMessageDialog;
 import org.gnome.gtk.Gtk;
-import org.gnome.gtk.MessageType;
+import org.gnome.gtk.WarningMessageDialog;
 import org.gnome.gtk.Window;
 
 import xseq.client.ProcedureClient;
@@ -61,6 +63,8 @@ public class WindowRunner
     }
 
     public static void loadAndRun(String filename, Window parent) throws FileNotFoundException {
+        Dialog error;
+
         Debug.print("main", "loading Procedure " + filename);
         String xml = null;
         try {
@@ -69,8 +73,7 @@ public class WindowRunner
             /*
              * No big deal.
              */
-            ModalDialog error = new ModalDialog("File not found", fnfe.getMessage() + "\nTry again?",
-                    MessageType.WARNING);
+            error = new WarningMessageDialog(null, "File not found", fnfe.getMessage() + "\nTry again?");
             error.run();
 
             throw fnfe;
@@ -79,8 +82,7 @@ public class WindowRunner
              * This is worse - something happened when trying to read. No
              * good.
              */
-            ModalDialog error = new ModalDialog("I/O Error trying to read file", ioe.getMessage(),
-                    MessageType.ERROR);
+            error = new ErrorMessageDialog(null, "I/O Error trying to read file", ioe.getMessage());
             error.run();
             Gtk.mainQuit();
             System.exit(1);
@@ -102,11 +104,11 @@ public class WindowRunner
             msg = msg.replaceAll(">", "&gt;");
             msg = msg.replaceAll("<", "&lt;");
 
-            ModalDialog error = new ModalDialog(
+            error = new ErrorMessageDialog(
+                    null,
                     "Invalid Procedure",
                     msg
-                            + "\n\n<i>You'll need to fix your document's XML before you can continue.</i> (By the way, this <b>is</b> an <tt>xseq</tt> Procedure, right?)",
-                    MessageType.ERROR);
+                            + "\n\n<i>You'll need to fix your document's XML before you can continue.</i> (By the way, this <b>is</b> an <tt>xseq</tt> Procedure, right?)");
             error.run();
             Gtk.mainQuit();
             System.exit(1);

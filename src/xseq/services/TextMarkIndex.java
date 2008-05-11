@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
  */
 public class TextMarkIndex
 {
-    private HashMap _map = null;
+    private HashMap<String, MarkPair> map = null;
 
     /**
      * Construct a new index. Unlike ElementIndex, this constructor
@@ -56,7 +56,7 @@ public class TextMarkIndex
          * we (at the moment) aren't going past this, we choose a very low
          * load factor to improve performance.
          */
-        _map = new HashMap(length, (float) 0.01);
+        map = new HashMap(length, (float) 0.01);
     }
 
     public void addMarks(String id, TextMark startMark, TextMark endMark) {
@@ -65,7 +65,7 @@ public class TextMarkIndex
             throw new IllegalArgumentException(
                     "Attempt to add an entry for an ID attribute which was empty");
         }
-        if (_map.containsKey(id)) {
+        if (map.containsKey(id)) {
             throw new IllegalArgumentException(
                     "Attempt to add an entry for an ID attribute which was already in the index. IDs must be unique!");
         }
@@ -75,7 +75,7 @@ public class TextMarkIndex
         // end marks can be null
 
         MarkPair pair = new MarkPair(startMark, endMark);
-        _map.put(id, pair);
+        map.put(id, pair);
     }
 
     /**
@@ -87,21 +87,21 @@ public class TextMarkIndex
      * @return the associated element, or null if not present.
      */
     public TextMark getStartMarkById(String id) {
-        MarkPair pair = (MarkPair) _map.get(id);
+        MarkPair pair = map.get(id);
         // get() returns null if the key doesn't match a value.
         if (pair == null) {
             throw new DebugException("you asked for a Mark [pair] by index for which there is no entry");
         }
-        return pair._start;
+        return pair.start;
     }
 
     public TextMark getEndMarkById(String id) {
-        MarkPair pair = (MarkPair) _map.get(id);
+        MarkPair pair = map.get(id);
         // get() returns null if the key doesn't match a value.
         if (pair == null) {
             throw new DebugException("you asked for a Mark [pair] by index for which there is no entry");
         }
-        return pair._end;
+        return pair.end;
     }
 
 }
@@ -113,12 +113,12 @@ public class TextMarkIndex
 
 class MarkPair
 {
-    TextMark _start;
+    TextMark start;
 
-    TextMark _end;
+    TextMark end;
 
     MarkPair(TextMark startMark, TextMark endMark) {
-        this._start = startMark;
-        this._end = endMark;
+        this.start = startMark;
+        this.end = endMark;
     }
 }

@@ -15,7 +15,6 @@ import org.gnome.gdk.Event;
 import org.gnome.glade.Glade;
 import org.gnome.glade.XML;
 import org.gnome.gtk.Label;
-import org.gnome.gtk.Scale;
 import org.gnome.gtk.TextBuffer;
 import org.gnome.gtk.TextIter;
 import org.gnome.gtk.TextMark;
@@ -26,6 +25,7 @@ import org.gnome.gtk.ToggleToolButton;
 import org.gnome.gtk.ToolButton;
 import org.gnome.gtk.Widget;
 import org.gnome.gtk.Window;
+import org.gnome.pango.Scale;
 import org.gnome.pango.Underline;
 import org.gnome.pango.Weight;
 import org.w3c.dom.Document;
@@ -50,45 +50,45 @@ public class DetailsWindow
 {
     // we cache a number of widgets to save grinding through the glade code
     // every time we need access to one of them.
-    XML _glade = null;
+    XML glade = null;
 
-    Window _top = null;
+    Window top = null;
 
-    Label _section_label = null;
+    Label section_label = null;
 
-    TextView _section_textview = null;
+    TextView section_textview = null;
 
-    ToolButton _prev_toolbutton = null;
+    ToolButton prev_toolbutton = null;
 
-    ToolButton _current_toolbutton = null;
+    ToolButton current_toolbutton = null;
 
-    ToolButton _next_toolbutton = null;
+    ToolButton next_toolbutton = null;
 
     // the StateButtons, in particular, need to be accessible from outside
-    StateButtons _stateButtons = null;
+    StateButtons stateButtons = null;
 
     // holds a TextBuffer for each of the Sections in the document;
     // we switch between them as we navigate.
-    private TextBuffer[] _buffers = null;
+    private TextBuffer[] buffers = null;
 
-    private String[] _titles = null;
+    private String[] titles = null;
 
-    private int _numSections;
+    private int numSections;
 
     // while this is indeed duplicative of what ProcedureClient.ui is holding,
     // this speeds up moving across the buffer arrays in the showAs() methods.
-    private int _currentSection;
+    private int currentSection;
 
     // we reuse the same tag (markup) table for each TextBuffer.
-    private TextTagTable _tagTable = null;
+    private TextTagTable table = null;
 
-    private TextMarkIndex _sectionMarkIndex = null;
+    private TextMarkIndex sectionMarkIndex = null;
 
-    private TextMarkIndex _stepMarkIndex = null;
+    private TextMarkIndex stepMarkIndex = null;
 
-    private TextMarkIndex _nameMarkIndex = null;
+    private TextMarkIndex nameMarkIndex = null;
 
-    private TextMarkIndex _taskMarkIndex = null;
+    private TextMarkIndex taskMarkIndex = null;
 
     /**
      * The glade code to instantiate the Gtk window and attach basic handlers.
@@ -97,7 +97,7 @@ public class DetailsWindow
      */
     DetailsWindow() {
         try {
-            _glade = Glade.parse("share/details.glade", null);
+            glade = Glade.parse("share/details.glade", null);
         } catch (FileNotFoundException e) {
             // If it can't find that glade file, we have an app
             // configuration problem or worse some UI bug, and need to abort.
@@ -107,10 +107,10 @@ public class DetailsWindow
             e.printStackTrace();
             ProcedureClient.abort("An internal error occured trying to read and process the glade file for DetailsWindow.");
         }
-        _top = (Window) _glade.getWidget("details");
-        _top.hide();
+        top = (Window) glade.getWidget("details");
+        top.hide();
 
-        _top.connect(new Window.DELETE_EVENT() {
+        top.connect(new Window.DELETE_EVENT() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Debug.print("listeners", "calling end_program() to initiate app termination");
                 close_window();
@@ -123,38 +123,44 @@ public class DetailsWindow
          * this textview is not editable, and the horizonal scrollbar is
          * never.
          */
-        _section_textview = (TextView) _glade.getWidget("section_textview");
+        section_textview = (TextView) glade.getWidget("section_textview");
 
-        _section_label = (Label) _glade.getWidget("currentsectiontitle_label");
-        _prev_toolbutton = (ToolButton) _glade.getWidget("prev_toolbutton");
-        _current_toolbutton = (ToolButton) _glade.getWidget("current_toolbutton");
-        _next_toolbutton = (ToolButton) _glade.getWidget("next_toolbutton");
+        section_label = (Label) glade.getWidget("currentsectiontitle_label");
+        prev_toolbutton = (ToolButton) glade.getWidget("prev_toolbutton");
+        current_toolbutton = (ToolButton) glade.getWidget("current_toolbutton");
+        next_toolbutton = (ToolButton) glade.getWidget("next_toolbutton");
 
         /*
          * Following the recommended optimization, create a TextTagTable for
          * use in the TextBuffers we will create later. First up are the tags
          * used for layout
          */
-        TextBuffer blank = new TextBuffer();
-        TextTag tag = null;
-        tag = blank.createTag("section");
-        tag.setScale(Scale.X_LARGE);
-        tag.setWeight(Weight.BOLD);
 
-        tag = blank.createTag("step");
-        tag.setScale(Scale.LARGE);
-        tag.setWeight(Weight.BOLD);
+        table = new TextTagTable();
 
-        tag = blank.createTag("name");
-        tag.setUnderline(Underline.SINGLE);
-        tag.setIndent(5);
+        tags.section = new TextTag();
+        tags.section.setScale(Scale.X_LARGE);
+        tags.section.setWeight(Weight.BOLD);
+        table.add(tags.section);
 
-        tag = blank.createTag("task_num");
-        tag.setIndent(-16);
-        tag.setLeftMargin(15);
+        tags.step = new TextTag();
+        tags.step.setScale(Scale.LARGE);
+        tags.step.setWeight(Weight.BOLD);
+        table.add(tags.step);
 
-        tag = blank.createTag("task");
-        tag.setLeftMargin(15);
+        tags.name = new TextTag();
+        tags.name.setUnderline(Underline.SINGLE);
+        tags.name.setIndent(5);
+        table.add(tags.name);
+
+        tags.taskNum = new TextTag();
+        tags.taskNum.setIndent(-16);
+        tags.taskNum.setLeftMargin(15);
+        table.add(tags.taskNum);
+
+        tags.task = new TextTag();
+        tags.task.setLeftMargin(15);
+        table.add(tags.task);
 
         /*
          * And now the tags used to change the visible emphasis of elements as
@@ -165,48 +171,49 @@ public class DetailsWindow
         final String LIGHTGRAY = "#AAAAAA";
         final String YELLOW = "yellow";
 
-        tag = blank.createTag("upcoming_task");
+        tags.upcomingTask = new TextTag();
+        table.add(tags.upcomingTask);
         // unused
 
-        tag = blank.createTag("current_task");
-        tag.setBackground(YELLOW); // TODO IMPROVE ME
+        tags.currentTask = new TextTag();
+        tags.currentTask.setBackground(YELLOW); // TODO IMPROVE ME
+        table.add(tags.currentTask);
 
-        tag = blank.createTag("done_task");
-        tag.setStrikethrough(true);
+        tags.doneTask = new TextTag();
+        tags.doneTask.setStrikethrough(true);
+        table.add(tags.doneTask);
 
-        tag = blank.createTag("upcoming_step");
-        tag.setForeground(DARKGRAY);
+        tags.upcomingStep = new TextTag();
+        tags.upcomingStep.setForeground(DARKGRAY);
+        table.add(tags.upcomingStep);
 
-        tag = blank.createTag("current_step");
-        tag.setForeground(BLACK);
+        tags.currentStep = new TextTag();
+        tags.currentStep.setForeground(BLACK);
+        table.add(tags.currentStep);
 
-        tag = blank.createTag("done_step");
-        tag.setForeground(LIGHTGRAY);
-
-        /*
-         * extract tags for use in future tables
-         */
-        _tagTable = blank.getTextTagTable();
+        tags.doneStep = new TextTag();
+        tags.doneStep.setForeground(LIGHTGRAY);
+        table.add(tags.doneStep);
 
         /*
          * build the StateButtons underneath the ToggleToolButtons.
          */
-        _stateButtons = new StateButtons("details");
+        stateButtons = new StateButtons("details");
 
         for (int i = 0; i < State.NUM_BUTTONS; i++) {
-            ToggleToolButton toggletoolbutton = (ToggleToolButton) _glade.getWidget("state"
+            ToggleToolButton toggletoolbutton = (ToggleToolButton) glade.getWidget("state"
                     + State.colours[i] + "_toggletoolbutton");
 
             if (toggletoolbutton == null) {
                 throw new DebugException("didn't get a widget from LibGlade");
             }
 
-            _stateButtons.addToSet(toggletoolbutton, i);
+            stateButtons.addToSet(toggletoolbutton, i);
         }
 
-        _top.resize(1, 600);
-        _top.move(450, 5);
-        _top.present();
+        top.resize(1, 600);
+        top.move(450, 5);
+        top.present();
     }
 
     // this will later evolve into a setProcedure()?
@@ -216,9 +223,9 @@ public class DetailsWindow
         Document dom = p.getDOM();
 
         NodeList sections = dom.getElementsByTagName("section");
-        _numSections = sections.getLength();
+        numSections = sections.getLength();
 
-        if (_numSections == 0) {
+        if (numSections == 0) {
             throw new DebugException(
                     "How did you manage to get here with a procedure with no <sections>?");
         }
@@ -227,10 +234,10 @@ public class DetailsWindow
          * Initialize the TextMark indecies. They are populated in
          * sectionToBuffer().
          */
-        _sectionMarkIndex = new TextMarkIndex(dom, "section");
-        _stepMarkIndex = new TextMarkIndex(dom, "step");
-        _nameMarkIndex = new TextMarkIndex(dom, "name");
-        _taskMarkIndex = new TextMarkIndex(dom, "task");
+        sectionMarkIndex = new TextMarkIndex(dom, "section");
+        stepMarkIndex = new TextMarkIndex(dom, "step");
+        nameMarkIndex = new TextMarkIndex(dom, "name");
+        taskMarkIndex = new TextMarkIndex(dom, "task");
 
         /*
          * The entire UI strategy here revolves around turning <section>
@@ -245,29 +252,29 @@ public class DetailsWindow
          * need to convert this from an array to some sort of dynamic
          * Collection.
          */
-        _buffers = new TextBuffer[_numSections];
-        _titles = new String[_numSections];
+        buffers = new TextBuffer[numSections];
+        titles = new String[numSections];
 
-        for (int i = 0; i < _numSections; i++) {
+        for (int i = 0; i < numSections; i++) {
             Element section = (Element) sections.item(i);
 
-            _titles[i] = section.getAttribute("num") + ". " + section.getAttribute("title");
-            _buffers[i] = sectionToBuffer(section);
+            titles[i] = section.getAttribute("num") + ". " + section.getAttribute("title");
+            buffers[i] = sectionToBuffer(section);
         }
         /*
          * And start up at the first section.
          */
-        _prev_toolbutton.setSensitive(false);
-        if (_numSections > 1) {
-            _next_toolbutton.setSensitive(true);
+        prev_toolbutton.setSensitive(false);
+        if (numSections > 1) {
+            next_toolbutton.setSensitive(true);
         } else {
-            _next_toolbutton.setSensitive(false);
+            next_toolbutton.setSensitive(false);
         }
         activateSection(0, true);
     }
 
     public void close_window() {
-        _top.hide();
+        top.hide();
         // TODO testing only. REMOVE and replace with closing (deactivating)
         // this window only...
         ProcedureClient.ui.shutdown();
@@ -284,8 +291,8 @@ public class DetailsWindow
      *         processed.
      */
     public TextBuffer sectionToBuffer(Element section) {
-        TextBuffer buf = new TextBuffer(_tagTable);
-        TextIter iter = buf.getStartIter();
+        TextBuffer buf = new TextBuffer(table);
+        TextIter iter = buf.getIterStart();
 
         /*
          * Run through the <step> <name> <task> element groups and call the
@@ -297,7 +304,7 @@ public class DetailsWindow
         int num_steps = steps.getLength();
 
         if (num_steps == 0) {
-            buf.insertText("No step items listed for this section!?!");
+            buf.insert(iter, "No step items listed for this section!?!");
             return buf;
         }
 
@@ -305,10 +312,10 @@ public class DetailsWindow
             Element step = (Element) steps.item(i);
             String stepId = step.getAttribute("id");
 
-            TextMark stepStartMark = buf.createMark(stepId + "start", iter, true);
+            TextMark stepStartMark = buf.createMark(iter, true);
             // the third argument, a String, refers to a TextTag to apply
-            buf.insertText(iter, step.getAttribute("num") + ". ", "step");
-            buf.insertText(iter, step.getAttribute("title") + "\n", "step");
+            buf.insert(iter, step.getAttribute("num") + ". ", tags.step);
+            buf.insert(iter, step.getAttribute("title") + "\n", tags.step);
 
             NodeList names = step.getElementsByTagName("name");
             int num_names = names.getLength();
@@ -317,8 +324,8 @@ public class DetailsWindow
                 Element name = (Element) names.item(j);
                 String nameId = name.getAttribute("id");
 
-                TextMark nameStartMark = buf.createMark(nameId + "start", iter, true);
-                buf.insertText(iter, name.getAttribute("who") + "\n", "name");
+                TextMark nameStartMark = buf.createMark(iter, true);
+                buf.insert(iter, name.getAttribute("who") + "\n", tags.name);
 
                 NodeList tasks = name.getElementsByTagName("task");
                 int num_tasks = tasks.getLength();
@@ -327,18 +334,18 @@ public class DetailsWindow
                     Element task = (Element) tasks.item(k);
                     String taskId = task.getAttribute("id");
 
-                    TextMark taskStartMark = buf.createMark(taskId + "start", iter, true);
-                    buf.insertText(iter, task.getAttribute("num") + ". ", "task_num");
-                    buf.insertText(iter, XmlUtils.getElementText(task) + "\n", "task");
-                    TextMark taskEndMark = buf.createMark(taskId + "end", iter, true);
+                    TextMark taskStartMark = buf.createMark(iter, true);
+                    buf.insert(iter, task.getAttribute("num") + ". ", tags.taskNum);
+                    buf.insert(iter, XmlUtils.getElementText(task) + "\n", tags.task);
+                    TextMark taskEndMark = buf.createMark(iter, true);
 
-                    _taskMarkIndex.addMarks(taskId, taskStartMark, taskEndMark);
+                    taskMarkIndex.addMarks(taskId, taskStartMark, taskEndMark);
                 }
-                TextMark nameEndMark = buf.createMark(nameId + "end", iter, true);
-                _nameMarkIndex.addMarks(nameId, nameStartMark, nameEndMark);
+                TextMark nameEndMark = buf.createMark(iter, true);
+                nameMarkIndex.addMarks(nameId, nameStartMark, nameEndMark);
             }
-            TextMark stepEndMark = buf.createMark(stepId + "end", iter, true);
-            _stepMarkIndex.addMarks(stepId, stepStartMark, stepEndMark);
+            TextMark stepEndMark = buf.createMark(iter, true);
+            stepMarkIndex.addMarks(stepId, stepStartMark, stepEndMark);
 
             showStepAsUpcoming(stepId);
         }
@@ -390,7 +397,7 @@ public class DetailsWindow
      *            the current Step.
      */
     public void activateSection(int index, boolean containsCurrentStep) {
-        if ((index < 0) && (index >= _numSections)) {
+        if ((index < 0) && (index >= numSections)) {
             throw new DebugException(
                     "DetailsWindow's activateSection() was called with an illegal section number, "
                             + index);
@@ -400,17 +407,17 @@ public class DetailsWindow
          * If we're now at the beginning, turn off the prev button
          */
         if (index == 0) {
-            _prev_toolbutton.setSensitive(false);
+            prev_toolbutton.setSensitive(false);
         } else {
-            _prev_toolbutton.setSensitive(true);
+            prev_toolbutton.setSensitive(true);
         }
         /*
          * If we're at now at the end, turn off the next button
          */
-        if (index == (_numSections - 1)) {
-            _next_toolbutton.setSensitive(false);
+        if (index == (numSections - 1)) {
+            next_toolbutton.setSensitive(false);
         } else {
-            _next_toolbutton.setSensitive(true);
+            next_toolbutton.setSensitive(true);
         }
 
         /*
@@ -418,20 +425,20 @@ public class DetailsWindow
          * need the "Current Step" button hot; otherwise we do.
          */
         if (containsCurrentStep) {
-            _current_toolbutton.setSensitive(false);
+            current_toolbutton.setSensitive(false);
         } else {
-            _current_toolbutton.setSensitive(true);
+            current_toolbutton.setSensitive(true);
         }
 
         /*
          * Now, do the UI alterations. First, bring up the appropriate
          * TextBuffer, then set the title.
          */
-        _section_textview.setBuffer(_buffers[index]);
-        _section_textview.showAll();
+        section_textview.setBuffer(buffers[index]);
+        section_textview.showAll();
 
-        _section_label.setLabel("<span size=\"xx-large\">" + _titles[index] + "</span>");
-        _currentSection = index;
+        section_label.setLabel("<span size=\"xx-large\">" + titles[index] + "</span>");
+        currentSection = index;
     }
 
     /**
@@ -439,7 +446,7 @@ public class DetailsWindow
      * whatever runner. HACK. Does it even work?
      */
     public void initialGrabFocus() {
-        _section_textview.grabFocus();
+        section_textview.grabFocus();
     }
 
     /**
@@ -473,15 +480,15 @@ public class DetailsWindow
      *            which <task>to change, by XML ID.
      */
     public void showTaskAsUpcoming(String taskId) {
-        showAs(taskId, _taskMarkIndex, null, "upcoming_task");
+        showAs(taskId, taskMarkIndex, null, tags.upcomingTask);
     }
 
     public void showTaskAsCurrent(String taskId) {
-        showAs(taskId, _taskMarkIndex, "upcoming_task", "current_task");
+        showAs(taskId, taskMarkIndex, tags.upcomingTask, tags.currentTask);
     }
 
     public void showTaskAsDone(String taskId) {
-        showAs(taskId, _taskMarkIndex, "current_task", "done_task");
+        showAs(taskId, taskMarkIndex, tags.currentTask, tags.doneTask);
     }
 
     /**
@@ -491,15 +498,15 @@ public class DetailsWindow
      *            the <step>to show as [state]
      */
     public void showStepAsUpcoming(String stepId) {
-        showAs(stepId, _stepMarkIndex, null, "upcoming_step");
+        showAs(stepId, stepMarkIndex, null, tags.upcomingStep);
     }
 
     public void showStepAsCurrent(String stepId) {
-        showAs(stepId, _stepMarkIndex, "upcoming_step", "current_step");
+        showAs(stepId, stepMarkIndex, tags.upcomingStep, tags.currentStep);
     }
 
     public void showStepAsDone(String stepId) {
-        showAs(stepId, _stepMarkIndex, "current_step", "done_step");
+        showAs(stepId, stepMarkIndex, tags.currentStep, tags.doneStep);
     }
 
     /**
@@ -509,14 +516,14 @@ public class DetailsWindow
      * 
      * @param id
      *            which element block to change, by XML ID.
-     * @param tagNameRemove
+     * @param tagRemove
      *            the TextTag formatting to apply (the name given when the tag
      *            was created). Use null if you just want to add a tag.
-     * @param tagNameAdd
+     * @param tagAdd
      *            the TextTag formatting to apply (the name given when the tag
      *            was created). Use null if you just want to remove a tag.
      */
-    private void showAs(String id, TextMarkIndex markIndex, String tagNameRemove, String tagNameAdd) {
+    private void showAs(String id, TextMarkIndex markIndex, TextTag tagRemove, TextTag tagAdd) {
         /*
          * Mark can tell us what buffer it is in, so if we replaced the index
          * use with this:
@@ -542,12 +549,24 @@ public class DetailsWindow
         endMark = markIndex.getEndMarkById(id);
         endIter = buf.getIter(endMark);
 
-        if (tagNameRemove != null) {
-            buf.removeTag(tagNameRemove, startIter, endIter);
+        if (tagRemove != null) {
+            buf.removeTag(tagRemove, startIter, endIter);
         }
-        if (tagNameAdd != null) {
-            buf.applyTag(tagNameAdd, startIter, endIter);
+        if (tagAdd != null) {
+            buf.applyTag(tagAdd, startIter, endIter);
         }
     }
 
+}
+
+/*
+ * Just a naming convenience.
+ */
+class tags
+{
+    static TextTag section, step, name, task;
+
+    static TextTag taskNum, upcomingTask, currentTask, doneTask;
+
+    static TextTag upcomingStep, currentStep, doneStep;
 }

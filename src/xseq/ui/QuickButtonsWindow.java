@@ -87,8 +87,8 @@ public class QuickButtonsWindow
          * Initialize the menu items
          */
         MenuItem hide = (MenuItem) _glade.getWidget("hide_menuitem");
-        hide.addListener(new MenuItemListener() {
-            public void menuItemEvent(MenuItemEvent event) {
+        hide.connect(new MenuItem.ACTIVATE() {
+            public void onActivate(MenuItem source) {
                 _top.hide();
             }
         });
@@ -124,8 +124,8 @@ public class QuickButtonsWindow
         int s_w = _top.getScreen().getWidth();
         int s_h = _top.getScreen().getHeight();
 
-        int w = _top.getWindow().getWidth();
-        int h = _top.getWindow().getHeight();
+        int w = _top.getAllocation().getWidth();
+        int h = _top.getAllocation().getHeight();
 
         _top.move(s_w - w - 15, s_h - h - 50);
         /*

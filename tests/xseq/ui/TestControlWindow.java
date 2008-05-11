@@ -2,7 +2,7 @@
  * TestControlWindow.java
  * 
  * See LICENCE file for usage and redistribution terms
- * Copyright (c) 2004-2005 Operational Dynamics
+ * Copyright (c) 2004-2005, 2008 Operational Dynamics
  */
 package xseq.ui;
 
@@ -20,6 +20,7 @@ import org.gnome.gtk.IconSize;
 import org.gnome.gtk.Image;
 import org.gnome.gtk.Label;
 import org.gnome.gtk.RadioButton;
+import org.gnome.gtk.RadioButtonGroup;
 import org.gnome.gtk.Stock;
 import org.gnome.gtk.VBox;
 import org.gnome.gtk.VButtonBox;
@@ -106,14 +107,14 @@ public class TestControlWindow
         _top.setIcon(construction_pixbuf);
 
         Image construction_image = (Image) _glade.getWidget("construction");
-        construction_image.set(construction_pixbuf);
+        construction_image.setImage(construction_pixbuf);
 
         NodeList names = p.getDOM().getElementsByTagName("name");
         int num_names = names.getLength();
         /*
          * A list of the names of participants
          */
-        HashSet participants = new HashSet(num_names, 0.1f);
+        HashSet<String> participants = new HashSet<String>(num_names, 0.1f);
 
         for (int i = 0; i < num_names; i++) {
             Element name = (Element) names.item(i);
@@ -129,23 +130,24 @@ public class TestControlWindow
         // this one won't actually be displayed, but forms the foundation of
         // the
         // radiobutton group; otherwise difficult to dynamically instantiate.
-        RadioButton rb0 = new RadioButton((RadioButton) null, "None selected", false);
+        RadioButtonGroup group = new RadioButtonGroup();
+        RadioButton rb0 = new RadioButton(group, "None selected");
 
-        Iterator iter = participants.iterator();
+        Iterator<String> iter = participants.iterator();
 
         RadioButton[] pickRadioButtons = new RadioButton[participants.size() + 1];
         pickRadioButtons[0] = rb0;
         int j = 1;
 
         while (iter.hasNext()) {
-            String person = (String) iter.next();
+            String person = iter.next();
             // the RadioButton API says you give one to add another to its
             // group
-            pickRadioButtons[j] = new RadioButton(rb0, person, false);
+            pickRadioButtons[j] = new RadioButton(group, person);
             pickRadioButtons[j].connect(new Button.CLICKED() {
                 public void onClicked(Button source) {
                     RadioButton rb = (RadioButton) source;
-                    if (rb.getState()) {
+                    if (rb.getActive()) {
                         // ie, if I've been made active
                         /*
                          * And finally do something with the label...
@@ -225,7 +227,7 @@ public class TestControlWindow
         int k = 0;
 
         while (iter.hasNext()) {
-            String person = (String) iter.next();
+            String person = iter.next();
 
             /*
              * If the buttons were just simple automatically labelled ones,
