@@ -145,15 +145,14 @@ public class JabberConfigWindow
         /*
          * A listener that can be used for both entry fields
          */
-        Editable.CHANGED jidUpdater = new Editable.CHANGED() {
-            public void entryEvent(EntryEvent event) {
-                if (event.getType() == EntryEvent.Type.CHANGED) {
-                } else if (event.getType() == EntryEvent.Type.ACTIVATE) {
-                    _apply_button.grabDefault();
-                    _apply_button.emitClicked();
-                }
+        Entry.ACTIVATE jidUpdaterActivate = new Entry.ACTIVATE() {
+            public void onActivate(Entry source) {
+                _apply_button.grabDefault();
+                _apply_button.emitClicked();
             }
+        };
 
+        Editable.CHANGED jidUpdater = new Editable.CHANGED() {
             public void onChanged(Editable source) {
                 _username = _username_entry.getText();
                 _server = _server_entry.getText();
@@ -186,6 +185,10 @@ public class JabberConfigWindow
         _server_entry.connect(jidUpdater);
         _username_entry.connect(jidUpdater);
         _password_entry.connect(jidUpdater);
+
+        _server_entry.connect(jidUpdaterActivate);
+        _username_entry.connect(jidUpdaterActivate);
+        _password_entry.connect(jidUpdaterActivate);
 
         /*
          * Set passed in values, if present. TODO does this actually work with
