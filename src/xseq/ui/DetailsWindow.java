@@ -138,29 +138,24 @@ public class DetailsWindow
 
         table = new TextTagTable();
 
-        tags.section = new TextTag();
+        tags.section = new TextTag(table);
         tags.section.setScale(Scale.X_LARGE);
         tags.section.setWeight(Weight.BOLD);
-        table.add(tags.section);
 
-        tags.step = new TextTag();
+        tags.step = new TextTag(table);
         tags.step.setScale(Scale.LARGE);
         tags.step.setWeight(Weight.BOLD);
-        table.add(tags.step);
 
-        tags.name = new TextTag();
+        tags.name = new TextTag(table);
         tags.name.setUnderline(Underline.SINGLE);
         tags.name.setIndent(5);
-        table.add(tags.name);
 
-        tags.taskNum = new TextTag();
+        tags.taskNum = new TextTag(table);
         tags.taskNum.setIndent(-16);
         tags.taskNum.setLeftMargin(15);
-        table.add(tags.taskNum);
 
-        tags.task = new TextTag();
+        tags.task = new TextTag(table);
         tags.task.setLeftMargin(15);
-        table.add(tags.task);
 
         /*
          * And now the tags used to change the visible emphasis of elements as
@@ -171,29 +166,23 @@ public class DetailsWindow
         final String LIGHTGRAY = "#AAAAAA";
         final String YELLOW = "yellow";
 
-        tags.upcomingTask = new TextTag();
-        table.add(tags.upcomingTask);
+        tags.upcomingTask = new TextTag(table);
         // unused
 
-        tags.currentTask = new TextTag();
+        tags.currentTask = new TextTag(table);
         tags.currentTask.setBackground(YELLOW); // TODO IMPROVE ME
-        table.add(tags.currentTask);
 
-        tags.doneTask = new TextTag();
+        tags.doneTask = new TextTag(table);
         tags.doneTask.setStrikethrough(true);
-        table.add(tags.doneTask);
 
-        tags.upcomingStep = new TextTag();
+        tags.upcomingStep = new TextTag(table);
         tags.upcomingStep.setForeground(DARKGRAY);
-        table.add(tags.upcomingStep);
 
-        tags.currentStep = new TextTag();
+        tags.currentStep = new TextTag(table);
         tags.currentStep.setForeground(BLACK);
-        table.add(tags.currentStep);
 
-        tags.doneStep = new TextTag();
+        tags.doneStep = new TextTag(table);
         tags.doneStep.setForeground(LIGHTGRAY);
-        table.add(tags.doneStep);
 
         /*
          * build the StateButtons underneath the ToggleToolButtons.
