@@ -529,20 +529,17 @@ public class DetailsWindow
 
         TextBuffer buf;
         TextMark startMark, endMark;
-        TextIter startIter, endIter;
 
         startMark = markIndex.getStartMarkById(id);
         buf = startMark.getBuffer();
-        startIter = buf.getIter(startMark);
 
         endMark = markIndex.getEndMarkById(id);
-        endIter = buf.getIter(endMark);
 
         if (tagRemove != null) {
-            buf.removeTag(tagRemove, startIter, endIter);
+            buf.removeTag(tagRemove, startMark.getIter(), endMark.getIter());
         }
         if (tagAdd != null) {
-            buf.applyTag(tagAdd, startIter, endIter);
+            buf.applyTag(tagAdd, startMark.getIter(), endMark.getIter());
         }
     }
 
