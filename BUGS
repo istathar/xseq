@@ -1,0 +1,8 @@
+If you find a bug with xseq or wish to make a suggestion, please do so at:
+
+	http://research.operationaldynamics.com/projects/xseq/report
+
+In particular, we're interested in what changes you might have to make to get
+it to build and run on your particular platform. This is especially important
+as both java-gnome and gcj are still somewhat bleeding edge and we can make an
+important contribution by ensuring they work on a broader range of systems.

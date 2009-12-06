@@ -1,0 +1,250 @@
+A guide to hacking on xseq:
+
+RETRIEVING THE SOURCE CODE
+--------------------------
+
+xseq is maintained in an Darcs repository. If you haven't used Darcs before,
+you'll find it an extraordinarily easy to use, powerful, and full featured
+distributed revision control system. You can learn more at http://www.darcs.net
+
+You can fetch the source code by doing the following:
+
+	darcs get http://research.operationaldynamics.com/darcs/xseq/
+	cd xseq
+	./configure
+	make
+
+This will build Java bytecode classes using javac. As a convenience, 
+
+	make run
+
+will compile the classes and run xseq in a standard Java Virtual Machine. (At
+the moment this executes a wrapper which loads some sample data and then
+initializes the various windows so that the the results of the code can be
+visually inspected).
+
+Before you do that, you may want to do
+
+	make test
+
+which will run the unit tests, an excellent way to make sure your installation
+is complete and that things are working correctly. You'll need JUnit for this.
+In fact, at the moment, configure requires the junit jars be present, so you
+might as well run the unit tests! (FIXME)
+
+[Oh, one thing that Darcs does that's a bit silly is that it doesn't
+automatically mark scripts as executable. So you may have to
+
+	chmod +x configure
+
+first. You can avoid this if you use the --set-scripts-executable option with
+the `darcs get` command, or if you add "get --set-scripts-executable" to a file
+called ~/.darcs/defaults . I'm hoping upstream will change this to be the
+default behaviour]
+
+
+PREREQUSITES
+------------
+
+xseq is written in Java and uses uses:
+
+* java-gnome	Bindings around the GTK and GNOME libraries
+		http://java-gnome.sourceforge.net
+
+* junit		Unit testing framework for Java
+		http://www.junit.org
+
+
+CONFIGURATION
+--------------
+
+The top level directory contains a custom ./configure which detects your
+Operating System variant, sets defaults accoringly, verifies the location of
+prerequisites (the various jars files), and finally chooses a Java bytecode
+compiler and Java virtual machine runtime environment.
+
+Your configuration is persistent across builds in that checkout - ie, `make
+clean` won't force you to reconfigure (though `make distclean` will). The
+configure script runs very quickly, so it's no big deal if you have to re run
+it. The configuration output is a makefile fragment which is written to .config
+and subsequently included by the top level Makefile.
+
+You can override the choices configure makes by listing parameters on the
+command line, like this:
+
+	./configure compiler=gcj runtime=gij
+
+This facilitates easily switching between runtimes and compilers for testing.
+At the moment, the available selections are:
+
+* compiler ->	javac, jikes, gcj
+
+* runtime  ->	java, gij, kaffe
+
+* quiet		(don't output anything)
+
+Right now, Gentoo Linux is fully configured, and Debian is getting there. If
+you are running a different operating system or distribution, please contact
+us and we'll add it - it's just a matter of identifying the location of a few
+things. Better yet, look in the configure Perl script - the places where 
+OS is switched are obvious, and just add what you need to add.
+
+The whole point of configure is to figure things out for you, but if it can't
+quite figure out where Java is, you can override it by specifying an alternate
+location to find a JDK and/or GCJ, using either of the following:
+
+* jdk_home	(where to find a traditional Java Development Kit, ie JAVA_HOME)
+
+* gcj_home	(location of an alternate GCJ install)
+
+For example:
+
+	./configure jdk_home=/opt/sun-jdk-1.4.2.04
+
+If you're having trouble with something as Make runs and need to debug it, you
+can try:
+
+	V=1 make 
+
+which will show you the actual commands being executed by Make (ie, Make's
+normal behaviour, which we override for appearances sake).
+
+
+A NOTE ABOUT GCJ GENERATED NATIVE CODE
+--------------------------------------
+
+xseq has been built with GCJ compatability in mind. The amazing thing about 
+GCJ is that in addition to being able to generate class files (the -C argument),
+it can generate native object code! We have every intention of distributing
+xseq as a native executable using gcj.
+
+Linking gcj compiled java sources against other jars which are its prerequisite
+dependencies is tricky; sometimes you can just do
+
+	gcj -shared -o libblah.so blah.jar
+
+but at the moment, the Xerces XML library doesn't compile that way, and so the
+application can't be linked with GCJ. Apparently GCJ-4 has improvements so that
+this will no longer be an issue. We'll see.
+
+
+One other gotcha is that gcj doesn't have the same sophistication with respect
+to finding and automatically compiling source code that javac does. With javac,
+you can just list the top level class and, recursively, all of its dependencies
+will be scanned and if necessary compiled. This is a huge savings since you
+don't have to do an invocations of javac for each source file, thus avoiding
+the time penelty of firing up each javac (and more to the point, the Java VM it
+runs in)
+
+The implication of this, though, is that doing something straight forward like
+
+	find src -name '*.java'
+
+to get the list of source files to feed to GCJ doesn't work: it picks up *all*
+the source files, and so anything in the tree that is incomplete or worse has
+experimental dependencies on things that may not be available on your system
+will cause the native build step to fail.
+
+
+In due course, make will automatically build both classes and native files; the
+command 
+
+	make build/native 
+
+will build the native code using GCJ. See stash/Makefile-native for details.
+
+
+RUNNING IN ECLIPSE
+------------------
+
+One of the significant reasons to ensure that the program still builds and runs
+with a conventional Java VM is so that it can be worked on in Eclipse.
+
+To run in eclipse, I had to do LD_LIBRARY_PATH=/usr/lib /opt/eclipse/eclipse
+which is a touch annoying - not sure what I'm missing there.
+
+
+CONTRIBUTING
+------------
+
+I would welcome contributions back. If you'd like to do so, please either
+follow the code formatting conventions you see, or use something like Eclipse
+to autoformat things, (write me and I'll send you the format description file).
+
+In any event, please contact me and we'll talk about the best way to send
+patches. Given that darcs is a fully distributed version control system, if you
+are intending to make a contribution, you can prepare patches by committing
+them to your local working copy, and then using darcs send to generate an email
+with the your patches as they differ from those recorded in the repository you
+originally fetched from:
+
+	darcs record
+	darcs send --to=andrew@operationaldynamics.com  http://research.operationaldynamics.com/darcs/xseq/
+
+Darcs has an awesome ability to cherry pick patches, both in terms of composing
+the changes you wish to record as a patch, and in selecting what you send to
+[accept from] an external repository. Run: 
+
+	darcs changes
+
+to get the idea.
+
+One final note: I'd prefer patches that are complete and comprehensive; one
+liner bug fixes are fine when necessary (ie, if that's all it is) but if, say,
+you're adding support for a new distro to configure, record it as one complete
+patch rather than 5 small ones. For trivial fixes, just use a one line patch
+name; for more comprehensive patches please add a long comment (in addition to
+the patch name) when darcs offers you the chance.
+
+
+DIRECTORY LAYOUT
+----------------
+
+%	doc		Documentation, including user docs, programmer 
+			APIs (javadocs) and examples. 
+
+	share		Common files necessary for Client UI and/or Server
+			versions. Glade files, DTDs...
+
+	web		Files used for web interfaces. PHP, XSLT, 
+
+	src		Source files. Java.
+	
+	
+*	tests		Unit tests. Hierarchy of packages follows src/
+
+*	stash		Largely a scratch pad of partly finished sources and
+			examples. Subject to cleanup / removal, so DO NOT rely
+			on stuff in here.
+
+*+%	build		stamp files and other artifacts of build process (the
+			name is used largely because it makes the top level
+			Makefile really nice, ie targets like "build/classes"
+
+*+%	tmp		Output directory used during unit tests 
+
+*+%	tmp/classes	Output directory for compiled classes
+
+*+%	tmp/native	building & linking binary versions
+
+Key:
+
+* Does not need to be distributed at all (in source or binary form)
+
++ Tempory directories. They may not exist (ie, tmp/ is populated during
+  unit tests). If they do exist, they do not need to be distributed
+  and can be deleted at will.
+
+% Some or all files herein may be generated - ie, javadocs don't need to be
+  in VCS, but probably want to exist prior to shipping a release.
+
+FOR MORE INFORMATION
+--------------------
+
+We've set up Trac, an open source integrated wiki, issue tracker, and source
+browser to help support xseq. It's at:
+
+	http://research.operationaldynamics.com/projects/xseq/
+
+Frequently asked questions, support information, and bug tracking are all
+centralized there.
