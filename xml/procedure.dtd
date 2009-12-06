@@ -1,0 +1,33 @@
+<!-- <!ENTITY % identifier "id ID #IMPLIED"> -->
+<!-- <!ATTLIST procedure %identifier;> -->
+
+<!ELEMENT procedure (title,overview?,section*)>
+<!ATTLIST procedure id ID #IMPLIED>
+
+<!ELEMENT title (#PCDATA)>
+<!ATTLIST title id ID #IMPLIED>
+
+<!ELEMENT overview (#PCDATA)>
+<!ATTLIST overview id ID #IMPLIED>
+
+
+<!ELEMENT section (precis?,step+)>
+<!ATTLIST section title CDATA #REQUIRED>
+<!ATTLIST section start CDATA #IMPLIED>
+<!ATTLIST section id ID #IMPLIED>
+
+<!ELEMENT precis (#PCDATA)>
+<!ATTLIST precis id ID #IMPLIED>
+
+
+<!ELEMENT step (name+)>
+<!ATTLIST step title CDATA #REQUIRED>
+<!ATTLIST step id ID #IMPLIED>
+
+<!ELEMENT name (task+)>
+<!ATTLIST name who CDATA #REQUIRED>
+<!ATTLIST name id ID #IMPLIED>
+
+<!ELEMENT task (#PCDATA)>
+<!ATTLIST task id ID #IMPLIED>
+<!ATTLIST task status (done | working | problem | critical) #IMPLIED>
