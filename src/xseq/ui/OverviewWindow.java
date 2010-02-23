@@ -120,7 +120,7 @@ public class OverviewWindow
         top = (Window) glade.getWidget("overview");
         top.hide();
 
-        top.connect(new Window.DELETE_EVENT() {
+        top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Debug.print("listeners", "calling end_program() to initiate app termination");
                 close_window();
@@ -153,7 +153,7 @@ public class OverviewWindow
         // mess
         view.setReorderable(false);
 
-        view.connect(new TreeView.ROW_ACTIVATED() {
+        view.connect(new TreeView.RowActivated() {
             public void onRowActivated(TreeView source, TreePath path, TreeViewColumn vertical) {
                 int i = Integer.parseInt(path.toString());
 

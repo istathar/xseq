@@ -101,7 +101,7 @@ public class JabberConfigWindow
         _top = (Window) _glade.getWidget("jabberconfig");
         _top.hide();
 
-        _top.connect(new Window.DELETE_EVENT() {
+        _top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Debug.print("listeners", "calling end_program() to initiate app termination");
                 close_window();
@@ -145,14 +145,14 @@ public class JabberConfigWindow
         /*
          * A listener that can be used for both entry fields
          */
-        Entry.ACTIVATE jidUpdaterActivate = new Entry.ACTIVATE() {
+        Entry.Activate jidUpdaterActivate = new Entry.Activate() {
             public void onActivate(Entry source) {
                 _apply_button.grabDefault();
                 _apply_button.emitClicked();
             }
         };
 
-        Editable.CHANGED jidUpdater = new Editable.CHANGED() {
+        Editable.Changed jidUpdater = new Editable.Changed() {
             public void onChanged(Editable source) {
                 _username = _username_entry.getText();
                 _server = _server_entry.getText();
@@ -201,7 +201,7 @@ public class JabberConfigWindow
         /*
          * Hook up action buttons
          */
-        _apply_button.connect(new Button.CLICKED() {
+        _apply_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 /*
                  * Launch connection & validation test.
@@ -215,7 +215,7 @@ public class JabberConfigWindow
 
         Button cancel_button = (Button) _glade.getWidget("cancel_button");
 
-        cancel_button.connect(new Button.CLICKED() {
+        cancel_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 // TODO revert values
                 _top.hide();

@@ -6,7 +6,6 @@
  */
 package xseq.ui;
 
-import static org.gnome.gtk.FileChooserAction.OPEN;
 import generic.util.DebugException;
 
 import java.io.FileNotFoundException;
@@ -28,6 +27,8 @@ import org.gnome.gtk.Widget;
 import org.gnome.gtk.Window;
 
 import xseq.client.ProcedureClient;
+
+import static org.gnome.gtk.FileChooserAction.OPEN;
 
 /**
  * At the 0.2 stage, Need to specify either a procedure to be run, or the
@@ -93,7 +94,7 @@ public class TestLoadWindow
         _top.setSkipTaskbarHint(false);
         _top.setSkipPagerHint(false);
 
-        _top.connect(new Window.DELETE_EVENT() {
+        _top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Gtk.mainQuit();
                 System.exit(0);
@@ -129,7 +130,7 @@ public class TestLoadWindow
         _specify_radiobutton = (RadioButton) _glade.getWidget("specify_radiobutton");
 
         _filename_entry = (Entry) _glade.getWidget("filename_entry");
-        _filename_entry.connect(new Editable.CHANGED() {
+        _filename_entry.connect(new Editable.Changed() {
             public void onChanged(Editable source) {
                 _specify_radiobutton.setActive(true);
             }
@@ -137,7 +138,7 @@ public class TestLoadWindow
 
         Button select_button = (Button) _glade.getWidget("select_button");
 
-        select_button.connect(new Button.CLICKED() {
+        select_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 _chooser.showAll();
                 _chooser.present();
@@ -197,7 +198,7 @@ public class TestLoadWindow
 
         Button _init_button = (Button) _glade.getWidget("init_button");
 
-        _init_button.connect(new Button.CLICKED() {
+        _init_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 String filename = null;
                 if (_builtin_radiobutton.getActive() == true) {
@@ -223,7 +224,7 @@ public class TestLoadWindow
 
         Button _cancel_button = (Button) _glade.getWidget("cancel_button");
 
-        _cancel_button.connect(new Button.CLICKED() {
+        _cancel_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 Gtk.mainQuit();
                 System.exit(1);

@@ -59,7 +59,7 @@ public class QuickButtonsWindow
         _top = (Window) _glade.getWidget("quickbuttons");
         _top.hide();
 
-        _top.connect(new Window.DELETE_EVENT() {
+        _top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 ProcedureClient.ui.shutdown();
                 return false;
@@ -87,13 +87,13 @@ public class QuickButtonsWindow
          * Initialize the menu items
          */
         MenuItem hide = (MenuItem) _glade.getWidget("hide_menuitem");
-        hide.connect(new MenuItem.ACTIVATE() {
+        hide.connect(new MenuItem.Activate() {
             public void onActivate(MenuItem source) {
                 _top.hide();
             }
         });
         MenuItem quit = (MenuItem) _glade.getWidget("quit_menuitem");
-        quit.connect(new MenuItem.ACTIVATE() {
+        quit.connect(new MenuItem.Activate() {
             public void onActivate(MenuItem source) {
                 ProcedureClient.ui.shutdown();
             }

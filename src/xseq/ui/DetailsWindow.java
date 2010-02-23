@@ -110,7 +110,7 @@ public class DetailsWindow
         top = (Window) glade.getWidget("details");
         top.hide();
 
-        top.connect(new Window.DELETE_EVENT() {
+        top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 Debug.print("listeners", "calling end_program() to initiate app termination");
                 close_window();

@@ -39,7 +39,7 @@ import xseq.domain.State;
  * 
  * @author Andrew Cowie
  */
-public class StateButtons implements ToggleButton.TOGGLED
+public class StateButtons implements ToggleButton.Toggled
 {
     Window top = null;
 
@@ -242,7 +242,7 @@ public class StateButtons implements ToggleButton.TOGGLED
          */
         images[index] = new Image(offPixbufs[index]);
 
-        vbox.packStart(images[index]);
+        vbox.packStart(images[index], true, true, 0);
         vbox.reorderChild(images[index], 0);
 
         /*

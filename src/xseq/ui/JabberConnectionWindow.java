@@ -88,13 +88,13 @@ public class JabberConnectionWindow extends Thread
          * If the window is closed in advance of a connection being
          * successfully established, then terminate the worker thread. TODO
          */
-        _top.connect(new Window.DELETE_EVENT() {
+        _top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 return false;
             }
         });
         _cancel_button = (Button) _glade.getWidget("cancel_button");
-        _cancel_button.connect(new Button.CLICKED() {
+        _cancel_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 // _top.hide();
                 // _top.destroy();

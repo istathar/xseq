@@ -20,7 +20,7 @@ import org.gnome.gtk.IconSize;
 import org.gnome.gtk.Image;
 import org.gnome.gtk.Label;
 import org.gnome.gtk.RadioButton;
-import org.gnome.gtk.RadioButtonGroup;
+import org.gnome.gtk.RadioGroup;
 import org.gnome.gtk.Stock;
 import org.gnome.gtk.VBox;
 import org.gnome.gtk.VButtonBox;
@@ -90,7 +90,7 @@ public class TestControlWindow
         _top.setSkipTaskbarHint(false);
         _top.setSkipPagerHint(false);
 
-        _top.connect(new Window.DELETE_EVENT() {
+        _top.connect(new Window.DeleteEvent() {
             public boolean onDeleteEvent(Widget source, Event event) {
                 ProcedureClient.ui.shutdown();
                 return false;
@@ -130,7 +130,7 @@ public class TestControlWindow
         // this one won't actually be displayed, but forms the foundation of
         // the
         // radiobutton group; otherwise difficult to dynamically instantiate.
-        RadioButtonGroup group = new RadioButtonGroup();
+        RadioGroup group = new RadioGroup();
         RadioButton rb0 = new RadioButton(group, "None selected");
 
         Iterator<String> iter = participants.iterator();
@@ -144,7 +144,7 @@ public class TestControlWindow
             // the RadioButton API says you give one to add another to its
             // group
             pickRadioButtons[j] = new RadioButton(group, person);
-            pickRadioButtons[j].connect(new Button.CLICKED() {
+            pickRadioButtons[j].connect(new Button.Clicked() {
                 public void onClicked(Button source) {
                     RadioButton rb = (RadioButton) source;
                     if (rb.getActive()) {
@@ -159,7 +159,7 @@ public class TestControlWindow
                     }
                 }
             });
-            pick_vbuttonbox.packStart(pickRadioButtons[j]);
+            pick_vbuttonbox.packStart(pickRadioButtons[j], true, true, 0);
             j++;
         }
 
@@ -169,7 +169,7 @@ public class TestControlWindow
 
         _start_vbox = (VBox) _glade.getWidget("start_vbox");
         Button start_button = (Button) _glade.getWidget("start_button");
-        start_button.connect(new Button.CLICKED() {
+        start_button.connect(new Button.Clicked() {
             public void onClicked(Button source) {
                 /*
                  * gray out this button (can only start once)
@@ -244,11 +244,11 @@ public class TestControlWindow
             HBox hbox = new HBox(false, 2);
             taskButtons[k].add(hbox);
             Image apply = new Image(Stock.APPLY, IconSize.BUTTON);
-            hbox.packStart(apply);
+            hbox.packStart(apply, true, true, 0);
             Label label = new Label(person);
-            hbox.packStart(label);
+            hbox.packStart(label, true, true, 0);
 
-            taskButtons[k].connect(new Button.CLICKED() {
+            taskButtons[k].connect(new Button.Clicked() {
                 public void onClicked(Button source) {
                     String who = null;
                     Button b = source;
@@ -263,7 +263,7 @@ public class TestControlWindow
                 }
             });
 
-            others_vbuttonbox.packStart(taskButtons[k]);
+            others_vbuttonbox.packStart(taskButtons[k], true, true, 0);
             k++;
         }
 
