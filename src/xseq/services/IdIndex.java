@@ -1,8 +1,7 @@
 /*
  * XML Sequences for mission critical IT procedures
  *
- * Copyright © 2005 Operational Dynamics
- * Copyright © 2010 Operational Dynamics Consulting, Pty Ltd
+ * Copyright © 2005-2010 Operational Dynamics Consulting, Pty Ltd
  *
  * The code in this file, and the program it is a part of, is made available
  * to you by its authors as open source software: you can redistribute it
@@ -31,12 +30,12 @@ import org.w3c.dom.NodeList;
 /**
  * An index allowing rapid lookup of the next element ID in a set of peers.
  * Frequently, we need to jump from one element to the next in the document.
- * Doing so strictly in the DOM tree is tricky as you have to deal with all the
- * permutations of hierarchies possible.
+ * Doing so strictly in the DOM tree is tricky as you have to deal with all
+ * the permutations of hierarchies possible.
  * 
  * <P>
- * Implemented as two collections. A first is a hash going from ID String to an
- * array index number, which then is used to rapidly do lookups in the
+ * Implemented as two collections. A first is a hash going from ID String to
+ * an array index number, which then is used to rapidly do lookups in the
  * sequential List of IDs, which then allows easy determination of the "next"
  * peer's ID.
  * 
@@ -48,65 +47,69 @@ import org.w3c.dom.NodeList;
  */
 public class IdIndex
 {
-	private HashMap		_idToArrayIndex	= null;
-	private ArrayList	_arrayIndexToId	= null;
+    private HashMap _idToArrayIndex = null;
 
-	/**
-	 * Construct an index on all the nodes in a DOM document matching tagName.
-	 */
-	public IdIndex(Document doc, String tagName) {
-		NodeList list = doc.getElementsByTagName(tagName);
-		int length = list.getLength();
+    private ArrayList _arrayIndexToId = null;
 
-		if (length == 0) {
-			throw new IllegalArgumentException("The DOM document being indexed doesn't have any " + tagName
-					+ " elements.");
-		}
+    /**
+     * Construct an index on all the nodes in a DOM document matching tagName.
+     */
+    public IdIndex(Document doc, String tagName) {
+        NodeList list = doc.getElementsByTagName(tagName);
+        int length = list.getLength();
 
-		_idToArrayIndex = new HashMap(length, (float) 0.01);
-		_arrayIndexToId = new ArrayList(length);
+        if (length == 0) {
+            throw new IllegalArgumentException("The DOM document being indexed doesn't have any "
+                    + tagName + " elements.");
+        }
 
-		for (int i = 0; i < length; i++) {
-			Element e = (Element) list.item(i);
-			String id = e.getAttribute("id");
-			if (id == null) {
-				throw new IllegalArgumentException("The DOM document being indexed lacks id tags on all elements");
-			}
+        _idToArrayIndex = new HashMap(length, (float) 0.01);
+        _arrayIndexToId = new ArrayList(length);
 
-			_idToArrayIndex.put(id, new Integer(i));
-			_arrayIndexToId.add(id);
-		}
-	}
+        for (int i = 0; i < length; i++) {
+            Element e = (Element) list.item(i);
+            String id = e.getAttribute("id");
+            if (id == null) {
+                throw new IllegalArgumentException(
+                        "The DOM document being indexed lacks id tags on all elements");
+            }
 
-	/**
-	 * Get the ID string for the next peer element from the sequential index.
-	 * 
-	 * @param currentId
-	 * @return
-	 */
+            _idToArrayIndex.put(id, new Integer(i));
+            _arrayIndexToId.add(id);
+        }
+    }
 
-	public String getNextId(String currentId) {
-		Integer index = (Integer) _idToArrayIndex.get(currentId);
-		if (index == null) {
-			throw new DebugException("Trying to lookup an id in an IdIndex that should be in its map, but isn't");
-		}
-		int i = index.intValue();
+    /**
+     * Get the ID string for the next peer element from the sequential index.
+     * 
+     * @param currentId
+     * @return
+     */
 
-		/*
-		 * Next. Should avoid IndexOutOfBoundsException.
-		 */
-		i++;
+    public String getNextId(String currentId) {
+        Integer index = (Integer) _idToArrayIndex.get(currentId);
+        if (index == null) {
+            throw new DebugException(
+                    "Trying to lookup an id in an IdIndex that should be in its map, but isn't");
+        }
+        int i = index.intValue();
 
-		if (i == _arrayIndexToId.size()) {
-			return null;
-		}
+        /*
+         * Next. Should avoid IndexOutOfBoundsException.
+         */
+        i++;
 
-		String nextId;
-		try {
-			nextId = (String) _arrayIndexToId.get(i);
-		} catch (IndexOutOfBoundsException ioobe) {
-			throw new DebugException("Despite reasonable checks, still managed to ask for an array index out of bounds");
-		}
-		return nextId;
-	}
+        if (i == _arrayIndexToId.size()) {
+            return null;
+        }
+
+        String nextId;
+        try {
+            nextId = (String) _arrayIndexToId.get(i);
+        } catch (IndexOutOfBoundsException ioobe) {
+            throw new DebugException(
+                    "Despite reasonable checks, still managed to ask for an array index out of bounds");
+        }
+        return nextId;
+    }
 }

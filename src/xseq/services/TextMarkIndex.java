@@ -1,8 +1,7 @@
 /*
  * XML Sequences for mission critical IT procedures
  *
- * Copyright © 2004,2008 Operational Dynamics
- * Copyright © 2010 Operational Dynamics Consulting, Pty Ltd
+ * Copyright © 2004-2010 Operational Dynamics Consulting, Pty Ltd
  *
  * The code in this file, and the program it is a part of, is made available
  * to you by its authors as open source software: you can redistribute it

@@ -1,8 +1,7 @@
 /*
  * XML Sequences for mission critical IT procedures
  *
- * Copyright © 2004-2005 Operational Dynamics
- * Copyright © 2010 Operational Dynamics Consulting, Pty Ltd
+ * Copyright © 2004-2010 Operational Dynamics Consulting, Pty Ltd
  *
  * The code in this file, and the program it is a part of, is made available
  * to you by its authors as open source software: you can redistribute it
@@ -32,26 +31,25 @@ import xseq.ui.ProcedureUserInterface;
  */
 public class ProcedureClient
 {
-	public static ProcedureUserInterface	ui		= null;
+    public static ProcedureUserInterface ui = null;
 
-	public static NetworkConnection			net		= null;
+    public static NetworkConnection net = null;
 
-	public final static String				VERSION	= "0.3.1";
+    public final static String VERSION = "0.3.1";
 
-	public static void main(String[] args) {
-	}
+    public static void main(String[] args) {}
 
-	/**
-	 * Go down hard. TODO Do we want to System.exit() here?
-	 * 
-	 * @param string
-	 *            Message to display on abort
-	 */
-	public static void abort(String message) {
-		System.err.println(message);
-		if (ui != null) {
-			ui.shutdown();
-		}
-	}
+    /**
+     * Go down hard. TODO Do we want to System.exit() here?
+     * 
+     * @param string
+     *            Message to display on abort
+     */
+    public static void abort(String message) {
+        System.err.println(message);
+        if (ui != null) {
+            ui.shutdown();
+        }
+    }
 
 }
