@@ -3,6 +3,7 @@
 
 <!ELEMENT procedure (title,overview?,section*)>
 <!ATTLIST procedure id ID #IMPLIED>
+<!ATTLIST procedure xmlns CDATA #FIXED "http://namespace.operationaldynamics.com/procedures/0.4">
 
 <!ELEMENT title (#PCDATA)>
 <!ATTLIST title id ID #IMPLIED>
@@ -11,8 +12,7 @@
 <!ATTLIST overview id ID #IMPLIED>
 
 
-<!ELEMENT section (precis?,step+)>
-<!ATTLIST section title CDATA #REQUIRED>
+<!ELEMENT section (title, precis?,step+)>
 <!ATTLIST section start CDATA #IMPLIED>
 <!ATTLIST section id ID #IMPLIED>
 
@@ -20,8 +20,7 @@
 <!ATTLIST precis id ID #IMPLIED>
 
 
-<!ELEMENT step (name+)>
-<!ATTLIST step title CDATA #REQUIRED>
+<!ELEMENT step (title, name+)>
 <!ATTLIST step id ID #IMPLIED>
 
 <!ELEMENT name (task+)>
