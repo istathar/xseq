@@ -1,7 +1,9 @@
 <xsl:stylesheet version="1.0"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:p="http://namespace.operationaldynamics.com/procedures/0.4"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	exclude-result-prefixes="p">
+
 	<xsl:output method="html" indent="no" omit-xml-declaration="yes"/>
 
 	<xsl:variable name="num">7</xsl:variable>
@@ -40,7 +42,7 @@
 
 	<xsl:template match="p:step">
 		<li>
-		<xsl:value-of select="p:title"/>
+		<p><u><xsl:value-of select="p:title"/></u></p>
 			<ul>
 			<xsl:apply-templates select="p:name"/>
 			</ul>
@@ -49,7 +51,7 @@
 
 	<xsl:template match="p:name">
 		<li>
-		<xsl:value-of select="@who"/>
+		<i><xsl:value-of select="@who"/></i>
 			<ol type="a">
 			<xsl:apply-templates select="p:task"/>
 			</ol>
