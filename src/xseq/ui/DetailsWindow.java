@@ -337,7 +337,8 @@ public class DetailsWindow
 
                     TextMark taskStartMark = buf.createMark(iter, true);
                     buf.insert(iter, task.getAttribute("num") + ". ", tags.taskNum);
-                    buf.insert(iter, XmlUtils.getElementText(task) + "\n", tags.task);
+                    buf.insert(iter, XmlUtils.getElementText(task).replace("\n \t", " ") + "\n",
+                            tags.task);
                     TextMark taskEndMark = buf.createMark(iter, true);
 
                     taskMarkIndex.addMarks(taskId, taskStartMark, taskEndMark);

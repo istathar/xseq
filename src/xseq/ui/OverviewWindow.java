@@ -44,6 +44,7 @@ import org.w3c.dom.NodeList;
 
 import xseq.client.ProcedureClient;
 import xseq.domain.Procedure;
+import xseq.services.XmlUtils;
 
 /**
  * The window which displays the overview of the procedure currently being
@@ -333,7 +334,9 @@ public class OverviewWindow
             text.append("\t"); // or some such spacer.
             text.append(step.getAttribute("num"));
             text.append(". ");
-            text.append(step.getAttribute("title"));
+            NodeList titles = step.getElementsByTagName("title");
+            Element title = (Element) titles.item(0);
+            text.append(XmlUtils.getElementText(title).trim());
             text.append("\n");
         }
 

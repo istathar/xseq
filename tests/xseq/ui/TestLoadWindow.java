@@ -55,7 +55,7 @@ public class TestLoadWindow
 {
     private static final String DEMO_SOURCE_DIR = "doc/examples";
 
-    private static final String DEMO_XML_FILE = "simpleProcedure_v1_Example.xml";
+    private static final String DEMO_XML_FILE = "DatabaseUpgrade_Procedure.xml";
 
     XML _glade = null;
 
