@@ -9,6 +9,7 @@ upgrade the schema of the core database at the heart of the application. We also
 have an outstanding requirement to upgrade the underlying database software, as
 we have had trouble with several bugs therein which the vendor reports fixed.
 </overview>
+
 <section>
 <title>
 Take site down
@@ -21,8 +22,8 @@ expected duration of the database schema upgrade scripts.
 <step>
 	<title>Enter maintenance mode</title>
 	<name who="Fozzie">
-		<task>Put web site into maintenance mode (load balancer redirect to
-		alternate web servers with static pages)</task>
+		<task>Put web site into maintenance mode (load balancer redirect
+		to alternate web servers with static pages)</task>
 	</name>
 	<name who="Gonzo">
 		<task>Activate IVR maintenance mode</task>
@@ -32,24 +33,26 @@ expected duration of the database schema upgrade scripts.
 	<title>Down services</title>
 	<name who="Kermit">
 		<task>Stop all VMs</task>
-		<task>Stop GFS on database2 then database1 to prevent failover</task>
+		<task>Stop GFS on database2 then database1 to prevent
+		failover</task>
 		<task>Ensure RAID filesystems still mounted</task>
-</name>
-<name who="Gonzo">
-<task>Stop Apache on web1, web2</task>
-</name>
+	</name>
+	<name who="Gonzo">
+		<task>Stop Apache on web1, web2</task>
+	</name>
 </step>
 <step>
-<title>
-Verification
-</title>
-<name who="Kermit">
-<task>Verify maintenance mode is active</task>
+	<title>
+	Verification
+	</title>
+	<name who="Kermit">
+		<task>Verify maintenance mode is active</task>
 		<task>Verify all VMs down</task>
 		<task>Go / NoGo for upgrade</task>
-</name>
+	</name>
 </step>
 </section>
+
 <section>
 <title>
 Database work
@@ -103,6 +106,7 @@ Database safety
 	</name>
 </step>
 </section>
+
 <section>
 <title>Restart site</title>
 <precis>
@@ -133,8 +137,8 @@ Restore the site to normal operation.
 <step>
 	<title>Make site live</title>
 	<name who="Fozzie">
-		<task>Put web site into production mode (load balancer back to normal
-		configuration)</task>
+		<task>Put web site into production mode (load balancer back to
+		normal configuration)</task>
 	</name>
 	<name who="Gonzo">
 		<task>Restore IVRs to normal operation</task>
@@ -142,4 +146,3 @@ Restore the site to normal operation.
 </step>
 </section>
 </procedure>
-<!-- vim:set ts=4: -->
